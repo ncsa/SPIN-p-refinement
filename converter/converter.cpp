@@ -71,16 +71,18 @@ void Converter::convert( string msh_file )
 			int total_elem = stoi(line);
 			getline( se, line );
 			// Save position of first element
-			int stream_pos = se.tellg();
+			streampos stream_pos = se.tellg();
 			// Iterate through elements to get total size and number of relevant elements
 			pair<int, int> elem_info = Converter::getSize( se, line );
 			int num_elems = elem_info.second;
 			int size = elem_info.first;
 			output << "\nCELLS         " << num_elems << "          " << size << "\n";
 			// Return to first element
-			se.seekg( stream_pos );
+			se.clear();
+			se.seekg( stream_pos, ios::beg );
 
 			// Skip the non-important elements (nodes, lines)
+			// This is line is problematic
 			for(int i = 0; i < (total_elem - num_elems); i++){
 				getline( se, line );
 			}
@@ -206,6 +208,9 @@ pair<int, int> Converter::getSize( ifstream &se, string line )
 								num_elems++;
 								break;
 						case 5: size += 9;
+								num_elems++;
+								break;
+						case 11: size += 11;
 								num_elems++;
 								break;
 						default: break;
