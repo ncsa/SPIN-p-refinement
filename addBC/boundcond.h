@@ -6,7 +6,8 @@
 #include <stdlib.h>
 
 void addBC( const char* vtk_file );
-void addPointData( FILE* vtk, int first, int second, float val );
+void addFloatPointData( FILE* vtk, int first, int second, float val );
+void addIntPointData( FILE* vtk, int first, int second, int val );
 int getNumNodes( FILE* vtk );
 
 #endif
