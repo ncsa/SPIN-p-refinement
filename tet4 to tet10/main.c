@@ -1,6 +1,7 @@
 // Main.c for converting tet4 to tet10
 
 #include <stdio.h>
+#include <time.h>
 
 #include "tet4.h"
 
@@ -13,7 +14,11 @@ int main( int argc, char* argv[] )
 	}
 	else
 	{
+		clock_t begin = clock();
 		toTet10( argv[1] );
+		clock_t end = clock();
+		double time = (double)(end - begin) / CLOCKS_PER_SEC;
+		printf("Time: %f\n", time);
 	}
 
 	return 0;

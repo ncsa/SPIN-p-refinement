@@ -42,7 +42,8 @@ void toTet10( const char* msh_file )
 	char* new_nodes[ num_elements * 6 ];
 	char* elements[ num_elements ];
 
-	// Read element lines and store in 
+	// Read element lines and store in elements[]
+	clock_t begin = clock();
 	for(int i = 0; i < num_elements; i++)
 	{
 		fgets(buff, 255, msh);
@@ -80,6 +81,7 @@ void toTet10( const char* msh_file )
 			if( i != 0 )
 			{
 				char* repeat = checkForRepeat( new_coord, new_nodes, i * 6 );
+				//char* repeat = lfind()
 				if( repeat == NULL )
 				{
 					new_nodes[i * 6] = strdup(new_coord);
@@ -212,11 +214,14 @@ void toTet10( const char* msh_file )
 			}
 		}
 	}
+	clock_t end = clock();
+	printf("Elem time: %f\n", (double)(end-begin)/CLOCKS_PER_SEC);
 
 	fclose( msh );
 	
 	// Put old nodes and new nodes in one list 
 	// Not efficient, will change in future (concat in writing stage)
+	begin = clock();
 	char* all_nodes[num_nodes + (num_elements * 6)];
 
 	for(int i = 0; i < num_nodes; i++)
@@ -240,9 +245,12 @@ void toTet10( const char* msh_file )
 			new_nodes[i] = strdup(all_nodes_id);
 		}
 	}
+	end = clock();
+	printf("Concating nodes: %f\n", (double)(end-begin)/CLOCKS_PER_SEC);
 
 	int num_nodes_new = j;
 
+	begin = clock();
 	// Get new elements
 	for(int i = 0; i < num_elements; i++)
 	{
@@ -286,6 +294,8 @@ void toTet10( const char* msh_file )
 			elements[i] = strdup(new_element);
 		}
 	}
+	end = clock();
+	printf("Getting new elems: %f\n", (double)(end-begin)/CLOCKS_PER_SEC);
 
 	// All new elements and nodes collected
 	// Rewrite to msh file and convert to vtk
