@@ -91,8 +91,6 @@ void toTet10( const char* msh_file )
 		}
 	}
 
-	fclose( msh );
-
 	// All new elements and nodes collected
 	// Rewrite to msh file and convert to vtk
 
@@ -126,8 +124,15 @@ void toTet10( const char* msh_file )
 	}
 
 	fputs("$EndElements\n", new_msh);
+	fgets(buff, 255, msh);
+
+	while( fgets(buff, 255, msh) != NULL )
+	{
+		fprintf(new_msh, "%s", buff);
+	}
 	
 	fclose( new_msh );
+	fclose( msh );
 }
 
 // Returns string containing a char representation of the nodes to added to the new element
