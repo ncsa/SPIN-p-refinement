@@ -94,8 +94,6 @@ void toTet10( const char* msh_file )
 	// All new elements and nodes collected
 	// Rewrite to msh file and convert to vtk
 
-	printf("%d + %d\n", last_id, num_nodes);
-
 	char* _msh_file = strdup(msh_file);
 	_msh_file[ strlen(_msh_file) - 4] = '\0';
 	char new_msh_file[255];

@@ -124,6 +124,51 @@ void Converter::convert( string msh_file )
 				}
 			}
 		}
+
+		// Node Data
+		if( line.compare("$NodeData") == 0 )
+		{
+			getline( se, line );
+			int num_string_tags = stoi(line);
+			for(int i = 0; i < num_string_tags; i++)
+			{
+				getline(se, line);
+			}
+			getline(se, line);
+			int num_real_tags = stoi(line);
+			for(int i = 0; i < num_real_tags; i++)
+			{
+				getline(se, line);
+			}
+			getline(se, line);
+			int num_int_tags = stoi(line);
+			for(int i = 0; i < num_int_tags; i++)
+			{
+				getline(se, line);
+			}
+
+			output << "\nPOINT_DATA        " << num_nodes << "\n";
+			output << "SCALARS Emat float" << "\n";
+			output << "LOOKUP_TABLE default" << "\n";
+
+			while(line.compare("$EndNodeData") != 0)
+			{
+				string line_sub = "";
+				getline(se, line);
+
+				for(int i = 0; i < line.length(); i++)
+				{
+					// Get rid of the node id (not included in vtk files)
+					if( line.at(i) == ' ' )
+					{
+						line_sub = line.substr(i + 1, line.length() - (i + 1));
+						break;
+					}
+				}
+				// Print node coords to output file
+				output << line_sub << endl;
+			}
+		}
 	}
 }
 
