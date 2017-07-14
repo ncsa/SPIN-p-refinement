@@ -1,5 +1,7 @@
 #include "boundcond.h"
 
+// Rewrite to write to msh files
+
 void addBC( const char * vtk_file )
 {
 	FILE * vtk = fopen( vtk_file, "a+" );

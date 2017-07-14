@@ -120,6 +120,8 @@ void Converter::convert( string msh_file )
 							break;
 					case 11: output << "24\n";	// 10-node second order tetrahedron
 							 break;
+					case 12: output << "29\n";  // 27-node second order hexahedron
+							 break;
 					default: break;
 				}
 			}
@@ -258,6 +260,9 @@ pair<int, int> Converter::getSize( ifstream &se, string line )
 						case 11: size += 11;
 								num_elems++;
 								break;
+						case 12: size += 28;
+								 num_elems++;
+								 break;
 						default: break;
 					}
 
