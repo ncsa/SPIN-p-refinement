@@ -95,7 +95,7 @@ void toTet10( const char* msh_file )
 	begin = clock();
 	// Read element lines and store in elements[]
 	#pragma omp parallel for schedule(static)
-	for(int i = num_tet4; i < num_elements; i++)
+	for(int i = num_elements - num_tet4; i < num_elements; i++)
 	{
 		//fgets(buff, 255, msh);
 		int elem_id;
@@ -116,7 +116,7 @@ void toTet10( const char* msh_file )
 			int n1, n2, n3, n4;
 			sscanf(elem_frag, "%d %d %d %d", &n1, &n2, &n3, &n4);
 
-			//printf("Element %d being created on thread %d\n", i, omp_get_thread_num());
+			printf("Element (%d, %d, %d, %d) being created on thread %d\n", n1, n2, n3, n4, omp_get_thread_num());
 			char * new_elem = constructElem( elem_frag, i, num_nodes, edges, num_elements, all_coords, nodes, n1, n2, n3, n4 );
 			elements[i] = malloc(strlen(new_elem) + 1);
 			strcpy(elements[i], new_elem);
@@ -213,6 +213,7 @@ int getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coords[
 	edge_t curr_edge;
 	#pragma omp critical
 	{
+		// If two threads read the same edge at the same time it is problematic
 		curr_edge = getEdge( n1, n2, edges );
 
 		if( curr_edge.inUse == 0 )
@@ -224,8 +225,8 @@ int getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coords[
 			edge_id++;
 
 			// Set coords
-			char* node_1 = strdup(nodes[n1 - 1]);
-			char* node_2 = strdup(nodes[n2 - 1]);
+			char* node_1 = nodes[n1 - 1];
+			char* node_2 = nodes[n2 - 1];
 			double x1, x2, y1, y2, z1, z2;
 			sscanf(node_1, "%lf %lf %lf", &x1, &y1, &z1);
 			sscanf(node_2, "%lf %lf %lf", &x2, &y2, &z2);
@@ -244,7 +245,7 @@ int getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coords[
 				edges[n2 - 1][n1 - 1] = curr_edge;
 			}
 
-			char * new_node = malloc(50);
+			char * new_node = malloc(100);
 			snprintf(new_node, 100, "%d %lf %lf %lf\n", curr_edge.node_id, curr_edge.x, curr_edge.y, curr_edge.z);
 			// This can be problematic if node_id is incremented incorrectly
 			all_coords[curr_edge.node_id] = strdup(new_node);
@@ -271,7 +272,6 @@ double avg( double a, double b )
 {
 	return (a+b) / 2.0;
 }
-
 
 
 
