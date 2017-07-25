@@ -63,11 +63,8 @@ void toTet20( const char* msh_file )
 		edges[i] = (edge_t*) calloc(num_nodes, sizeof(edge_t));
 	}
 
-	face_t** faces = (face_t**) calloc(num_nodes, sizeof(face_t));
-	for(int i = 0; i < num_nodes; i++)
-	{
-		faces[i] = (face_t*) calloc(num_nodes, sizeof(face_t));
-	}
+	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
+	face_t * faces = (face_t*) calloc(num_nodes*num_nodes*num_nodes, sizeof(face_t));
 
 	clock_t end = clock();
 
@@ -183,7 +180,7 @@ void toTet20( const char* msh_file )
 	fclose( msh );
 }
 
-char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edges, face_t** faces, int num_elem, char* all_coords[num_elem * 6], char ** nodes, int n1, int n2, int n3, int n4 )
+char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edges, face_t* faces, int num_elem, char* all_coords[num_elem * 6], char ** nodes, int n1, int n2, int n3, int n4 )
 {
 	int ids[4];
 
@@ -194,35 +191,35 @@ char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edge
 	char* edge_1 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n1, n2 );
 
 	// edge_7 and edge_8
-	char* edge_2 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n2, n3);
+	char* edge_2 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n2, n3 );
 
 	// edge_9 and edge_10
-	char* edge_3 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n1, n3 );
+	char* edge_3 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n3, n1 );
 
 	// edge_11 and edge_12
-	char* edge_4 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n1, n4 );
+	char* edge_4 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n4, n1 );
 
 	// edge_13 and edge_14
-	char* edge_5 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n3, n4 );
+	char* edge_5 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n4, n3 );
 
 	// edge_15 and edge_16
-	char* edge_6 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n2, n4 );
+	char* edge_6 = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n4, n2 );
 
 	// Face Nodes
 	// face_17
-	ids[0] = getFaceNodeId( elem_id, faces, num_elem, all_coords, nodes, n1, n2, n3 );
+	ids[0] = getFaceNodeId( elem_id, num_nodes, faces, num_elem, all_coords, nodes, n1, n2, n3 );
 
 	// face_18
-	ids[1] = getFaceNodeId( elem_id, faces, num_elem, all_coords, nodes, n1, n2, n4);
+	ids[1] = getFaceNodeId( elem_id, num_nodes, faces, num_elem, all_coords, nodes, n1, n2, n4);
 
 	// face_19
-	ids[2] = getFaceNodeId( elem_id, faces, num_elem, all_coords, nodes, n1, n3, n4 );
+	ids[2] = getFaceNodeId( elem_id, num_nodes, faces, num_elem, all_coords, nodes, n1, n3, n4 );
 
 	// face_20
-	ids[3] = getFaceNodeId( elem_id, faces, num_elem, all_coords, nodes, n2, n3, n4 );
+	ids[3] = getFaceNodeId( elem_id, num_nodes, faces, num_elem, all_coords, nodes, n2, n3, n4 );
 
 	char* new_elem = malloc(255);
-	snprintf( new_elem, 255, "%d 11 2 0 0 %s %s %s %s %s %s %s %d %d %d %d\n", elem_id + 1, elem_frag, edge_1, edge_2, edge_3, edge_4, edge_5, edge_6, ids[0], ids[1], ids[2], ids[3] );
+	snprintf( new_elem, 255, "%d 29 2 0 0 %s %s %s %s %s %s %s %d %d %d %d\n", elem_id + 1, elem_frag, edge_1, edge_2, edge_3, edge_4, edge_5, edge_6, ids[0], ids[1], ids[2], ids[3] );
 
 	return new_elem;
 }
@@ -326,13 +323,16 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 }
 
 // Gets and returns node id for two given nodes
-int getFaceNodeId( int elem_id, face_t ** faces, int num_elem, char* all_coords[num_elem*6], char ** nodes, int n1, int n2, int n3 )
+int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char* all_coords[num_elem*6], char ** nodes, int n1, int n2, int n3 )
 {
+	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
+
 	face_t curr_face;
 
 	// If two threads read the same edge at the same time it is race, this is v. slow
 	// Could try and insure no two threads every have same n1, n2
-	curr_face = getFace( n1, n2, n3, faces );
+	curr_face = getFace( n1, n2, n3, num_nodes, faces );
+	printf("faces[%d][%d][%d]\n", n1, n2, n3);
 	
 	if( curr_face.inUse == 0 )
 	{
@@ -341,7 +341,7 @@ int getFaceNodeId( int elem_id, face_t ** faces, int num_elem, char* all_coords[
 		#pragma omp critical
 		{
 			// Retest edge
-			curr_face = getFace( n1, n2, n3, faces );
+			curr_face = getFace( n1, n2, n3, num_nodes, faces );
 			if(curr_face.inUse == 0)
 			{
 				curr_face.node_id = edge_id;
@@ -350,7 +350,8 @@ int getFaceNodeId( int elem_id, face_t ** faces, int num_elem, char* all_coords[
 				// Store in faces
 				int id_1 = min3(n1, n2, n3);
 				int id_2 = snd_min(n1, n2, n3);
-				faces[id_1 - 1][id_2 - 1] = curr_face;
+				int id_3 = max3(n1, n2, n3);
+				faces(id_1 - 1, id_2 - 1, id_3 - 1) = curr_face;
 			}
 			else
 			{
@@ -368,20 +369,24 @@ int getFaceNodeId( int elem_id, face_t ** faces, int num_elem, char* all_coords[
 		num_faces++;
 
 			// Set coords
-		char* node_1 = nodes[n1 - 1];
-		char* node_2 = nodes[n2 - 1];
-		double x1, x2, y1, y2, z1, z2;
+		char* node_1 = strdup(nodes[n1 - 1]);
+		char* node_2 = strdup(nodes[n2 - 1]);
+		char* node_3 = strdup(nodes[n3 - 1]);
+		double x1, x2, x3, y1, y2, y3, z1, z2, z3;
 		sscanf(node_1, "%lf %lf %lf", &x1, &y1, &z1);
 		sscanf(node_2, "%lf %lf %lf", &x2, &y2, &z2);
-		curr_face.x = avg(x1, x2);
-		curr_face.y = avg(y1, y2);
-		curr_face.z = avg(z1, z2);
+		sscanf(node_3, "%lf %lf %lf", &x3, &y3, &z3);
+		curr_face.x = avg3(x1, x2, x3);
+		curr_face.y = avg3(y1, y2, y3);
+		curr_face.z = avg3(z1, z2, z3);
 		curr_face.inUse = 1;
 
 		// Store in faces
 		int id_1 = min3(n1, n2, n3);
 		int id_2 = snd_min(n1, n2, n3);
-		faces[id_1 - 1][id_2 - 1] = curr_face;
+		int id_3 = max3(n1, n2, n3);
+		faces(id_1 - 1, id_2 - 1, id_3 - 1) = curr_face;
+		printf("creating face %d %d %d\n", id_1, id_2, id_3);
 
 		char * new_node = malloc(100);
 		snprintf(new_node, 100, "%d %lf %lf %lf\n", curr_face.node_id, curr_face.x, curr_face.y, curr_face.z);
@@ -390,6 +395,10 @@ int getFaceNodeId( int elem_id, face_t ** faces, int num_elem, char* all_coords[
 			printf("overwriting %d\n", curr_face.node_id);
 
 		all_coords[curr_face.node_id] = new_node;
+	}
+	else
+	{
+		printf("face found: %d %d %d\n", n1, n2, n3);
 	}
 
 	return curr_face.node_id;
@@ -402,17 +411,25 @@ edge_t getEdge( int n1, int n2, edge_t ** edges )
 }
 
 // Lookup face in faces. The correct face is stored in the lowest to indices possible. I.E. Face[1,2,3] is stored in faces[1][2]
-face_t getFace( int n1, int n2, int n3, face_t ** faces )
+face_t getFace( int n1, int n2, int n3, int num_nodes, face_t* faces )
 {
+	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
+
 	int id_1 = min3( n1, n2, n3 );
 	int id_2 = snd_min( n1, n2, n3 );
-	return faces[id_1 - 1][id_2 - 1];
+	int id_3 = max3( n1, n2, n3 );
+	return faces(id_1 - 1, id_2 - 1, id_3 - 1);
 }
 
 // Simple averaging function
 double avg( double a, double b )
 {
 	return (a+b) / 2.0;
+}
+
+double avg3( double a, double b, double c )
+{
+	return (a+b+c) / 3.0;
 }
 
 // Simple min function with three parameters
@@ -437,16 +454,31 @@ int snd_min( int a, int b, int c )
 	int min = min3( a, b, c );
 	if(min == a)
 	{
-		return b > c ? b : c; 
+		return b < c ? b : c; 
 	}
 	else if(min == b)
 	{
-		return a > c ? a : c;
+		return a < c ? a : c;
 	}
 	else
 	{
-		return a > b ? a : b;
+		return a < b ? a : b;
 	}
+}
+
+int max3( int a, int b, int c )
+{
+	int max = a;
+	if( b > max )
+	{
+		max = b;
+	}
+	if( c > max )
+	{
+		max = c;
+	}
+
+	return max;
 }
 
 
