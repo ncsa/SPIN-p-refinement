@@ -270,8 +270,8 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 		if(retest == 1)
 		{
 			printf("found duplicate\n");
-			char * buff = malloc(10);
-			snprintf( buff, 10, "%d %d", curr_edge.node_id[0], curr_edge.node_id[1] );
+			char * buff = malloc(25);
+			snprintf( buff, 25, "%d %d %d", curr_edge.node_id[0], curr_edge.node_id[1], curr_edge.node_id[2] );
 			return buff;
 		}
 
@@ -381,8 +381,8 @@ char* getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, ch
 		if(retest == 1)
 		{
 			printf("found duplicate\n");
-			char * buff = malloc(10);
-			snprintf( buff, 10, "%d %d %d", curr_face.node_id[0], curr_face.node_id[1], curr_face.node_id[2] );
+			char * buff = malloc(25);
+			snprintf( buff, 25, "%d %d %d", curr_face.node_id[0], curr_face.node_id[1], curr_face.node_id[2] );
 			return buff;
 		}
 
@@ -393,13 +393,10 @@ char* getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, ch
 		char* node_1 = strdup(nodes[n1 - 1]);
 		char* node_2 = strdup(nodes[n2 - 1]);
 		char* node_3 = strdup(nodes[n3 - 1]);
-		printf("Nodes: %s %s %s\n", node_1, node_2, node_3);
 		double x1, x2, x3, y1, y2, y3, z1, z2, z3;
 		sscanf(node_1, "%lf %lf %lf", &x1, &y1, &z1);
 		sscanf(node_2, "%lf %lf %lf", &x2, &y2, &z2);
 		sscanf(node_3, "%lf %lf %lf", &x3, &y3, &z3);
-
-		printf("(%d, %d, %d) (%d, %d, %d) (%d, %d, %d)\n", x1, x2, x3, y1, y2, y3, z1, z2, z3);
 
 		double _x1 = thirds( x1, avg(x2, x3) );
 		double _y1 = thirds( y1, avg(y2, y3) );
@@ -410,8 +407,6 @@ char* getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, ch
 		double _x3 = thirds( x3, avg(x1, x2) );
 		double _y3 = thirds( y3, avg(y1, y2) );
 		double _z3 = thirds( z3, avg(z1, z2) );
-
-		printf("(%d, %d %d)\n(%d, %d, %d)\n(%d, %d, %d)\n", _x1, _y1, _z1, _x2, _y2, _z2, _x3, _y3, _z3);
 
 		curr_face.x1 = _x1;
 		curr_face.y1 = _y1;
@@ -448,8 +443,8 @@ char* getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, ch
 		printf("found face[%d][%d][%d]\n 	%s\n 	%s\n 	%s\n", n1, n2, n3, all_coords[curr_face.node_id[0]], all_coords[curr_face.node_id[1]], all_coords[curr_face.node_id[2]]);
 	}
 
-	char* buff = malloc(10);
-	snprintf( buff, 10, "%d %d %d", curr_face.node_id[0], curr_face.node_id[1], curr_face.node_id[2] );
+	char* buff = malloc(25);
+	snprintf( buff, 25, "%d %d %d", curr_face.node_id[0], curr_face.node_id[1], curr_face.node_id[2] );
 	return buff;
 }
 
@@ -577,7 +572,10 @@ int max3( int a, int b, int c )
 // Get the third distance from point a
 double thirds( double a, double b )
 {
-	return ( (2/3) * a ) + ( (1/3) * b );
+	double third_a = a * 2/3;
+	double third_b = b * 1/3;
+	double ret = third_a + third_b;
+	return ret;
 }
 
 

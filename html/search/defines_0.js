@@ -1,0 +1,4 @@
+var searchData=
+[
+  ['faces',['faces',['../tet4_01to_01tet20_2tet20_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet20.c'],['../tet4_01to_01tet20_2tet20_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet20.c'],['../tet4_01to_01tet20_2tet20_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet20.c'],['../tet35_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet35.c'],['../tet35_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet35.c'],['../tet35_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet35.c'],['../tet56_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet56.c'],['../tet56_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet56.c'],['../tet56_8c.html#a391267176a382c4636301acdd815c00a',1,'faces():&#160;tet56.c']]]
+];

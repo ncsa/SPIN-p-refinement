@@ -225,7 +225,7 @@ char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edge
 }
 
 // Gets and returns node id for two given nodes
-char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coords[num_elem*6], char ** nodes, int n1, int n2 )
+char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coords[num_elem*16], char ** nodes, int n1, int n2 )
 {
 	edge_t curr_edge;
 	edge_t curr_edge_rev;
@@ -245,10 +245,10 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 			if(curr_edge.inUse == 0)
 			{
 				curr_edge.node_id[0] = edge_id;
-				curr_edge_rev.node_id[0] = edge_id;
+				curr_edge_rev.node_id[1] = edge_id;
 				edge_id++;
 				curr_edge.node_id[1] = edge_id;
-				curr_edge_rev.node_id[1] = edge_id;
+				curr_edge_rev.node_id[0] = edge_id;
 				edge_id++;
 				curr_edge.inUse = 1;
 				curr_edge_rev.inUse = 1;
@@ -264,8 +264,8 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 		if(retest == 1)
 		{
 			printf("found duplicate\n");
-			char * buff = malloc(10);
-			snprintf( buff, 10, "%d %d", curr_edge.node_id[0], curr_edge.node_id[1] );
+			char * buff = malloc(15);
+			snprintf( buff, 15, "%d %d", curr_edge.node_id[0], curr_edge.node_id[1] );
 			return buff;
 		}
 
@@ -317,13 +317,13 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 		all_coords[curr_edge.node_id[1]] = new_node2;
 	}
 
-	char* buff = malloc(10);
-	snprintf( buff, 10, "%d %d", curr_edge.node_id[0], curr_edge.node_id[1] );
+	char* buff = malloc(15);
+	snprintf( buff, 15, "%d %d", curr_edge.node_id[0], curr_edge.node_id[1] );
 	return buff;
 }
 
 // Gets and returns node id for two given nodes
-int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char* all_coords[num_elem*6], char ** nodes, int n1, int n2, int n3 )
+int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char* all_coords[num_elem*16], char ** nodes, int n1, int n2, int n3 )
 {
 	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
 

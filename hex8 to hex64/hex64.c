@@ -243,8 +243,8 @@ char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edge
 	char* internal = getInternalNodeId( elem_id, num_elements, internals, all_coords, nodes, n1, n2, n3, n4, n5, n6, n7, n8 );
 
 	// Create new element
-	char new_elem[255];
-	snprintf( new_elem, 255, "%d 92 2 0 0 %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", elem_id, elem_frag, edge_1, edge_2, edge_3, edge_4, edge_5, edge_6, edge_7, edge_8, edge_9, edge_10, edge_11, edge_12, face_1, face_2, face_3, face_4, face_5, face_6, internal);
+	char new_elem[500];
+	snprintf( new_elem, 500, "%d 92 2 0 0 %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", elem_id, elem_frag, edge_1, edge_2, edge_3, edge_4, edge_5, edge_6, edge_7, edge_8, edge_9, edge_10, edge_11, edge_12, face_1, face_2, face_3, face_4, face_5, face_6, internal);
 
 	//printf("%s", new_elem);
 

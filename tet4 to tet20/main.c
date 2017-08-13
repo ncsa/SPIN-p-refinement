@@ -1,4 +1,4 @@
-// Main.c for converting tet4 to tet10
+// Main.c for converting tet4 to tet20
 
 #include <stdio.h>
 #include <time.h>

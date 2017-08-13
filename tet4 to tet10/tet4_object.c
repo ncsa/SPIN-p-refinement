@@ -50,9 +50,9 @@ void toTet10( const char* msh_file )
 
 	char ** all_coords = malloc(num_elements * 6 * sizeof(char*));
 
-	char** elements = malloc((num_elements) * sizeof(char*));
+	char ** elements = malloc((num_elements) * sizeof(char*));
 
-	edge_t** edges = (edge_t**) calloc(num_nodes, sizeof(edge_t));
+	edge_t ** edges = (edge_t **) calloc(num_nodes, sizeof(edge_t));
 	for(int i = 0; i < num_nodes; i++)
 	{
 		edges[i] = (edge_t*) calloc(num_nodes, sizeof(edge_t));
@@ -82,18 +82,22 @@ void toTet10( const char* msh_file )
 		// If the current element is a TET4
 		if(elem_id == 4)
 		{
+			//begin = clock();
 			int n1, n2, n3, n4;
 			sscanf(elem_frag, "%d %d %d %d", &n1, &n2, &n3, &n4);
 
-			char * new_elem = constructElem( elem_frag, elem_id, num_nodes, edges, num_elements, all_coords, nodes, n1, n2, n3, n4 );
-			elements[i] = malloc(strlen(new_elem) + 1);
-			strcpy(elements[i], new_elem);
+			char * new_elem = constructElem( elem_frag, i, num_nodes, edges, num_elements, all_coords, nodes, n1, n2, n3, n4 );
+			elements[i] = strdup(new_elem);
 			// Fix this maybe ... inefficient
+			//end = clock();
+			//printf("Elem Construct Time: %lf\n", (double)(end-begin)/CLOCKS_PER_SEC);
 		}
 	}
 	end = clock();
 
-	printf("Elem Construct Time: %lf\n", (double)(end-begin)/CLOCKS_PER_SEC);
+	printf("AVG Elem Construct Time: %lf\n", ((double)(end-begin)/CLOCKS_PER_SEC) / num_elements);
+
+	printf("Num Nodes: %d\n", num_nodes + num_edges);
 
 	// All new elements and nodes collected
 	// Rewrite to msh file and convert to vtk
@@ -105,7 +109,8 @@ void toTet10( const char* msh_file )
 	FILE * new_msh = fopen( new_msh_file, "w+" );
 
 	fputs("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n", new_msh);
-	fprintf(new_msh, "%d\n", ( num_nodes + edge_id ));
+
+	fprintf(new_msh, "%d\n", ( num_nodes + num_edges ));
 
 	for(int i = 0; i < num_nodes; i++)
 	{
@@ -163,7 +168,7 @@ char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edge
 	ids[5] = getEdgeNodeId( elem_id, edges, num_elem, all_coords, nodes, n2, n4 );
 
 	char new_elem[255];
-	snprintf( new_elem, 255, "%d 11 2 0 0 %s %d %d %d %d %d %d", elem_id, elem_frag, ids[0], ids[1], ids[2], ids[3], ids[4], ids[5] );
+	snprintf( new_elem, 255, "%d 11 2 0 0 %s %d %d %d %d %d %d\n", elem_id, elem_frag, ids[0], ids[1], ids[2], ids[3], ids[4], ids[5] );
 
 	return strdup(new_elem);
 }
@@ -174,14 +179,9 @@ int getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coords[
 
 	if( curr_edge.inUse == 0 )
 	{
-		//printf("creating edge\n");
-		//curr_edge = 0;
 		curr_edge.node_id = edge_id;
 		num_edges++;
 		edge_id++;
-		// An edge can belong to a max of 4 elements
-		curr_edge.elements[0] = elem_id;
-		curr_edge.num_elem = 1;
 
 		// Set coords
 		char* node_1 = strdup(nodes[n1 - 1]);
@@ -194,24 +194,15 @@ int getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coords[
 		curr_edge.z = avg(z1, z2);
 		curr_edge.inUse = 1;
 
-		//printf("%lf %lf %lf\n", curr_edge->x, curr_edge->y, curr_edge->z);
-
 		// Store in edges
 		if( n1 < n2 )
 			edges[n1 - 1][n2 - 1] = curr_edge;
 		else
 			edges[n2 - 1][n1 - 1] = curr_edge;
 
-		//printf("Adding node to all_coords[%d]\n", curr_edge->node_id);
 		char * new_node = malloc(50);
 		snprintf(new_node, 100, "%d %lf %lf %lf\n", curr_edge.node_id, curr_edge.x, curr_edge.y, curr_edge.z);
 		all_coords[curr_edge.node_id] = strdup(new_node);
-	}
-	else
-	{
-		//printf("edge %d found\n", curr_edge.node_id);
-		curr_edge.elements[curr_edge.num_elem] = elem_id;
-		curr_edge.num_elem++;
 	}
 
 	return curr_edge.node_id;

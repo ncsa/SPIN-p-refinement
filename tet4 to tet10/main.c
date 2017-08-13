@@ -2,8 +2,9 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <omp.h>
 
-#include "tet4.h"
+#include "tet4_object.h"
 
 int main( int argc, char* argv[] )
 {
@@ -14,10 +15,10 @@ int main( int argc, char* argv[] )
 	}
 	else
 	{
-		clock_t begin = clock();
+		double begin = omp_get_wtime();
 		toTet10( argv[1] );
-		clock_t end = clock();
-		double time = (double)(end - begin) / CLOCKS_PER_SEC;
+		double end = omp_get_wtime();
+		double time = (end - begin);
 		printf("Time: %f\n", time);
 	}
 

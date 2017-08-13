@@ -1,4 +1,4 @@
-// Main.c for converting tet4 to tet10
+// Main.c for converting hex8 to hex27
 
 #include <stdio.h>
 #include <time.h>
@@ -14,11 +14,11 @@ int main( int argc, char* argv[] )
 	}
 	else
 	{
-		clock_t begin = clock();
+		double begin = omp_get_wtime();
 		toHex27( argv[1] );
-		clock_t end = clock();
-		double time = (double)(end - begin) / CLOCKS_PER_SEC;
-		//printf("Time: %f\n", time);
+		double end = omp_get_wtime();
+		double time = (end - begin);
+		printf("Time: %f\n", time);
 	}
 
 	return 0;
