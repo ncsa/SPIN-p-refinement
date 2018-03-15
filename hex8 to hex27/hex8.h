@@ -5,6 +5,7 @@
  * @brief Header file for HEX-8 to HEX-27 refinement code
  *
  */
+// gcc-7 -fopenmp main.c hex8.c -o toHex27
 
 #ifndef HEX8_H
 #define HEX8_H
