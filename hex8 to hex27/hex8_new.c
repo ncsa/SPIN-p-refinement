@@ -164,8 +164,6 @@ void toHex27( const char* msh_file )
 	begin = omp_get_wtime();
 
 	// OpenMP parallelized for loop that constructs the new elements
-	omp_set_dynamic(0);
-	omp_set_num_threads(1);
 	#pragma omp parallel for schedule(static) shared(edge_id, num_edges)
 	for(int i = num_elements - num_hex8; i < num_elements; i++)
 	{
