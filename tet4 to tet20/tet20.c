@@ -23,39 +23,96 @@ void toTet20( const char* msh_file )
 	
 	char buff[255];
 
-	while( strcmp( buff, "$Nodes\n") != 0 )
+	// START MEMORY STORAGE
+	/* Initialize file size to 1024 lines, dynamically reallocate as file is read
+	*  When reallocation is needed, double size
+	*  var file_size is equivalent to the capacity of the file_dat[] array
+	*/
+	int file_size = 1024;
+	int node_start = -1;
+	int elem_start = -1;
+	int num_nodes = 0;
+	int num_elements = 0;
+	int reading_nodes = 0;
+	int reading_elems = 0;
+	char ** nodes;
+	char ** elements;
+
+	int node_idx = 0;
+	int elem_idx = 0;
+
+	char ** file_dat = malloc(sizeof(char*) * file_size);
+
+	/* Read file line by line, storing each line in file_dat[] array
+	*  Stores useful indices related to file_dat[], node_start and elem_start which indicate starting indices of node data and element data respectively
+	*  Populates nodes[] and elements[] arrays which contain pointers to the respectice chars stored in file_dat[] array. No new memory is allocated
+	*/
+	int num_lines = 0;
+	while( fgets(buff, 255, msh) != NULL )
 	{
-		fgets(buff, 255, msh);
+		file_dat[num_lines] = strdup(buff);
+		if( strcmp(buff, "$Nodes\n") == 0 )
+		{
+			node_start = num_lines + 2;
+		}
+		if( strcmp(buff, "$EndNodes\n") == 0 )
+		{
+			reading_nodes = 0;
+		}
+		if( strcmp(buff, "$Elements\n") == 0 )
+		{
+			elem_start = num_lines + 2;
+		}
+		if( strcmp(buff, "$EndElements") == 0 )
+		{
+			reading_elems = 0;
+		}
+		// Read nodes and populate nodes[] array
+		if( num_lines == node_start - 1 )
+		{
+			num_nodes = atoi(file_dat[node_start - 1]);
+		}
+		if( num_lines == elem_start - 1 )
+		{
+			num_elements = atoi(file_dat[elem_start - 1]);
+		}
+		if( num_lines == node_start )
+		{
+			nodes = malloc(sizeof(char*) * num_nodes);
+			reading_nodes = 1;
+		}
+		if( num_lines == elem_start )
+		{
+			elements = malloc(sizeof(char*) * (num_elements + 1));
+			reading_elems = 1;
+		}
+		if(reading_nodes == 1)
+		{
+			sscanf( file_dat[num_lines], "%*d %[^\t\n]", file_dat[num_lines] );
+			nodes[node_idx] = file_dat[num_lines];
+			node_idx++;
+		}
+		if(reading_elems == 1)
+		{
+			elements[elem_idx] = file_dat[num_lines];
+			elem_idx++;
+		}
+
+		num_lines++;
+		if( num_lines == file_size - 1 )
+		{
+			file_size = file_size * 2;
+			file_dat = realloc(file_dat, sizeof(char*) * file_size);
+		}
 	}
 
-	fgets(buff, 255, msh);
-	int num_nodes = atoi(buff);
+	// END MEMORY STORAGE
 
 	edge_id = num_nodes + 1;
-
-	// Read node lines and store in nodes array
-	char** nodes = malloc(num_nodes * sizeof(char*));
-	for(int i = 0; i < num_nodes; i++)
-	{
-		fscanf(msh, "%s ", buff);
-		fgets(buff, 255, msh);
-
-		nodes[i] = strdup(buff);
-	}
-
-	while( strcmp(buff, "$Elements\n") != 0 )
-	{
-		fgets(buff, 255, msh);
-	}
-	
-	fgets(buff, 255, msh);
-	int num_elements = atoi(buff);
 
 	// ALLOCATE MEMORY FOR EDGE AND ELEMENTS
 
 	char ** all_coords = malloc(num_elements * 16 * sizeof(char*));
-
-	char ** elements = malloc((num_elements) * sizeof(char*));
 
 	edge_t** edges = (edge_t**) calloc(num_nodes, sizeof(edge_t));
 	for(int i = 0; i < num_nodes; i++)
@@ -63,8 +120,13 @@ void toTet20( const char* msh_file )
 		edges[i] = (edge_t*) calloc(num_nodes, sizeof(edge_t));
 	}
 
+	// Need an alternative way to store faces, this method uses far too much memory
+	// ~~~ Store in array by tuple ~~~
 	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
 	face_t * faces = (face_t*) calloc(num_nodes*num_nodes*num_nodes, sizeof(face_t));
+	if( faces == NULL )
+		printf("calloc failed");
+	printf("%p\n", faces);
 
 	clock_t end = clock();
 
@@ -74,27 +136,26 @@ void toTet20( const char* msh_file )
 
 	int num_tet4 = 0;
 
-	// This should probably be fixed
-	// adds an extra unneccessary(?) iteration
+	// Read element lines and store in elements[]
 	for(int i = 0; i < num_elements; i++)
 	{
-		fgets(buff, 255, msh);
 		int elem_id;
 		int num_tags;
-		char* elem = strdup(buff);
-		elements[i] = strdup(buff);
 
 		char * elem_frag = (char*) malloc(255);
-		sscanf( elem, "%*d %d %d %[^\t\n]", &elem_id, &num_tags, elem_frag );
+		sscanf( elements[i], "%*d %d %d %[^\t\n]", &elem_id, &num_tags, elem_frag );
 		for(int j = 0; j < num_tags; j++)
 		{
-			sscanf(elem_frag, "%*d %[^\t\n]", elem_frag);
+			sscanf( elem_frag, "%*d %[^\t\n]", elem_frag );
 		}
 
-		if(elem_id == 4)
+		// If the current element if a tet4
+		if( elem_id == 4 )
 		{
 			num_tet4++;
 		}
+
+		free(elem_frag);
 	}
 
 	end = clock();
@@ -102,7 +163,7 @@ void toTet20( const char* msh_file )
 
 	begin = clock();
 	// Read element lines and store in elements[]
-	//#pragma omp parallel for schedule(static) shared(edge_id, num_edges)
+	#pragma omp parallel for schedule(static) shared(edge_id, num_edges)
 	for(int i = num_elements - num_tet4; i < num_elements; i++)
 	{
 		int elem_id;
@@ -149,7 +210,7 @@ void toTet20( const char* msh_file )
 
 	for(int i = 0; i < num_nodes; i++)
 	{
-		fprintf(new_msh, "%d %s", (i+1), nodes[i]);
+		fprintf(new_msh, "%d %s\n", (i+1), nodes[i]);
 		free(nodes[i]);
 	}
 
@@ -263,7 +324,7 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 		}
 		if(retest == 1)
 		{
-			printf("found duplicate\n");
+			//printf("found duplicate\n");
 			char * buff = malloc(15);
 			snprintf( buff, 15, "%d %d", curr_edge.node_id[0], curr_edge.node_id[1] );
 			return buff;
@@ -332,7 +393,6 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char
 	// If two threads read the same edge at the same time it is race, this is v. slow
 	// Could try and insure no two threads every have same n1, n2
 	curr_face = getFace( n1, n2, n3, num_nodes, faces );
-	printf("faces[%d][%d][%d]\n", n1, n2, n3);
 	
 	if( curr_face.inUse == 0 )
 	{
@@ -361,7 +421,7 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char
 
 		if(retest == 1)
 		{
-			printf("found duplicate\n");
+			//printf("found duplicate\n");
 			return curr_face.node_id;
 		}
 
@@ -386,7 +446,6 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char
 		int id_2 = snd_min(n1, n2, n3);
 		int id_3 = max3(n1, n2, n3);
 		faces(id_1 - 1, id_2 - 1, id_3 - 1) = curr_face;
-		printf("creating face %d %d %d\n", id_1, id_2, id_3);
 
 		char * new_node = malloc(100);
 		snprintf(new_node, 100, "%d %lf %lf %lf\n", curr_face.node_id, curr_face.x, curr_face.y, curr_face.z);
@@ -396,10 +455,10 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char
 
 		all_coords[curr_face.node_id] = new_node;
 	}
-	else
+	/*else
 	{
 		printf("face found: %d %d %d\n", n1, n2, n3);
-	}
+	}*/
 
 	return curr_face.node_id;
 }
