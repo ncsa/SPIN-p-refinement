@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
+#include "uthash.h"
+#include "stdbool.h"
 
 /**
  * @brief Edge object
@@ -40,6 +42,24 @@ typedef struct face {
 } face_t;
 
 /**
+* Document me!!
+*/
+typedef struct tuple {
+	int index1;
+	int index2;
+	int index3;
+} tuple_t;
+
+/**
+*	Document me!
+*/
+struct hash_table {
+	tuple_t key;
+	face_t value;
+	UT_hash_handle hh;
+};
+
+/**
 * Method to be called from main function that does all reading, constructing, and printing of new elements
 * @author Dan Gross
 * @date 30 July 2017
@@ -64,7 +84,7 @@ void toTet20( const char* msh_file );
 * @param n4 Node 4 in Tet-4 element
 * @return char* representation of refined element
 */
-char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edges, face_t * faces, int num_elem, char* all_coords[num_elem * 6], char ** nodes, int n1, int n2, int n3, int n4 );
+char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edges, struct hash_table * faces, int num_elem, char* all_coords[num_elem * 6], char ** nodes, int n1, int n2, int n3, int n4 );
 /**
 * Method that returns the edge object represented by the two nodes n1 and n2
 * @author Dan Gross
@@ -103,7 +123,7 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 * @param n3 Third node associated with face
 * @return Face Node ID for use in new element
 */
-int getFaceNodeId( int elem_id, int num_nodes, face_t * faces, int num_elem, char* all_coords[num_elem*6], char ** nodes, int n1, int n2, int n3 );
+int getFaceNodeId( int elem_id, int num_nodes, struct hash_table * faces, int num_elem, char* all_coords[num_elem*6], char ** nodes, int n1, int n2, int n3 );
 /**
 * Method that returns the face object represented by the nodes n1, n2, and n3
 * @author Dan Gross
@@ -114,7 +134,7 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t * faces, int num_elem, cha
 * @param faces 2-D array storing all face objects
 * @return Face associated with the three nodes
 */
-face_t getFace( int n1, int n2, int n3, int num_nodes, face_t * faces );
+face_t getFace( int n1, int n2, int n3, int num_nodes, struct hash_table * faces );
 // Math functions
 /**
 * Math function that returns average of two doubles
@@ -165,5 +185,15 @@ int max3( int a, int b, int c );
 * @return Average value of a, b, and c
 */ 
 double avg3( double a, double b, double c );
+
+/**
+* Equality function that returns whether or not two tuples are equal
+* @author Dan Gross
+* @date 17 March 2018
+* @param tup1 First tuple
+* @param tup2 Second Tuple
+* @return True if tuples are equal, false otherwise
+*/
+bool is_tuple_equal( tuple_t tup1, tuple_t tup2 );
 
 #endif

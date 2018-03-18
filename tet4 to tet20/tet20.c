@@ -120,13 +120,18 @@ void toTet20( const char* msh_file )
 		edges[i] = (edge_t*) calloc(num_nodes, sizeof(edge_t));
 	}
 
-	// Need an alternative way to store faces, this method uses far too much memory
-	// ~~~ Store in array by tuple ~~~
+	// If each element is distinct, there will be num_elements * 4 faces [4 faces per element]
+	int max_num_faces = num_elements * 4;
+	// Declare hash table
+	struct hash_table *faces = NULL;	/* important! initialize to NULL */
+
+	/*
 	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
 	face_t * faces = (face_t*) calloc(num_nodes*num_nodes*num_nodes, sizeof(face_t));
+	
 	if( faces == NULL )
 		printf("calloc failed");
-	printf("%p\n", faces);
+	*/
 
 	clock_t end = clock();
 
@@ -241,7 +246,7 @@ void toTet20( const char* msh_file )
 	fclose( msh );
 }
 
-char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edges, face_t* faces, int num_elem, char* all_coords[num_elem * 6], char ** nodes, int n1, int n2, int n3, int n4 )
+char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edges, struct hash_table * faces, int num_elem, char* all_coords[num_elem * 6], char ** nodes, int n1, int n2, int n3, int n4 )
 {
 	int ids[4];
 
@@ -384,10 +389,8 @@ char* getEdgeNodeId( int elem_id, edge_t ** edges, int num_elem, char* all_coord
 }
 
 // Gets and returns node id for two given nodes
-int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char* all_coords[num_elem*16], char ** nodes, int n1, int n2, int n3 )
+int getFaceNodeId( int elem_id, int num_nodes, struct hash_table * faces, int num_elem, char* all_coords[num_elem*16], char ** nodes, int n1, int n2, int n3 )
 {
-	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
-
 	face_t curr_face;
 
 	// If two threads read the same edge at the same time it is race, this is v. slow
@@ -408,10 +411,14 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char
 				edge_id++;
 				curr_face.inUse = 1;
 				// Store in faces
-				int id_1 = min3(n1, n2, n3);
-				int id_2 = snd_min(n1, n2, n3);
-				int id_3 = max3(n1, n2, n3);
-				faces(id_1 - 1, id_2 - 1, id_3 - 1) = curr_face;
+				tuple_t face_index;
+				face_index.index1 = n1;
+				face_index.index2 = n2;
+				face_index.index3 = n3;
+				struct hash_table *s = malloc(sizeof(struct hash_table));
+				s->key = face_index;
+				s->value = curr_face;
+				HASH_ADD( hh, faces, key, sizeof(tuple_t), s );
 			}
 			else
 			{
@@ -421,14 +428,14 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char
 
 		if(retest == 1)
 		{
-			//printf("found duplicate\n");
+			printf("found duplicate\n");
 			return curr_face.node_id;
 		}
 
 		#pragma omp atomic update
 		num_faces++;
 
-			// Set coords
+		// Set coords
 		char* node_1 = strdup(nodes[n1 - 1]);
 		char* node_2 = strdup(nodes[n2 - 1]);
 		char* node_3 = strdup(nodes[n3 - 1]);
@@ -442,10 +449,14 @@ int getFaceNodeId( int elem_id, int num_nodes, face_t* faces, int num_elem, char
 		curr_face.inUse = 1;
 
 		// Store in faces
-		int id_1 = min3(n1, n2, n3);
-		int id_2 = snd_min(n1, n2, n3);
-		int id_3 = max3(n1, n2, n3);
-		faces(id_1 - 1, id_2 - 1, id_3 - 1) = curr_face;
+		tuple_t face_index;
+		face_index.index1 = n1;
+		face_index.index2 = n2;
+		face_index.index3 = n3;
+		struct hash_table *s = malloc(sizeof(struct hash_table));
+		s->key = face_index;
+		s->value = curr_face;
+		HASH_ADD( hh, faces, key, sizeof(tuple_t), s );
 
 		char * new_node = malloc(100);
 		snprintf(new_node, 100, "%d %lf %lf %lf\n", curr_face.node_id, curr_face.x, curr_face.y, curr_face.z);
@@ -470,14 +481,26 @@ edge_t getEdge( int n1, int n2, edge_t ** edges )
 }
 
 // Lookup face in faces. The correct face is stored in the lowest to indices possible. I.E. Face[1,2,3] is stored in faces[1][2]
-face_t getFace( int n1, int n2, int n3, int num_nodes, face_t* faces )
+face_t getFace( int n1, int n2, int n3, int num_nodes, struct hash_table * faces )
 {
-	#define faces(i,j,k) (faces[num_nodes*num_nodes*i + num_nodes*j + k])
+	tuple_t face_index;
+	face_index.index1 = n1;
+	face_index.index2 = n2;
+	face_index.index3 = n3;
 
-	int id_1 = min3( n1, n2, n3 );
-	int id_2 = snd_min( n1, n2, n3 );
-	int id_3 = max3( n1, n2, n3 );
-	return faces(id_1 - 1, id_2 - 1, id_3 - 1);
+	struct hash_table * s;
+	HASH_FIND_INT(faces, &face_index, s);
+	// If s is not NULL, face_index was found in the hash table
+	if( s )
+	{
+		return s->value;
+	}
+	else
+	{
+		face_t empty_face;
+		empty_face.inUse = 0;
+		return empty_face;
+	}
 }
 
 // Simple averaging function
@@ -538,6 +561,32 @@ int max3( int a, int b, int c )
 	}
 
 	return max;
+}
+
+bool is_tuple_equal( tuple_t tup1, tuple_t tup2 )
+{
+	int tup1_min = min3( tup1.index1, tup1.index2, tup1.index3 );
+	int tup2_min = min3( tup2.index1, tup2.index2, tup2.index3 );
+	if( tup1_min != tup2_min )
+	{
+		return false;
+	}
+	int tup1_mid = snd_min( tup1.index1, tup1.index2, tup1.index3 );
+	int tup2_mid = snd_min( tup2.index1, tup2.index2, tup2.index3 );
+	if( tup1_mid != tup2_mid )
+	{
+		return false;
+	}
+	int tup1_max = max3( tup1.index1, tup1.index2, tup1.index3 );
+	int tup2_max = max3( tup2.index1, tup2.index2, tup2.index3 );
+	if( tup1_max != tup2_max )
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
 
