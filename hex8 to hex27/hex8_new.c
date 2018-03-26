@@ -103,6 +103,10 @@ void toHex27( const char* msh_file )
 		}
 	}
 
+	double end = omp_get_wtime();
+	printf("JK_part1: %lf\n", (end-begin));
+	begin = omp_get_wtime();
+
 	// edge_id: all new nodes created will start counting id's from num_nodes
 	edge_id = num_nodes + 1;
 
@@ -114,6 +118,7 @@ void toHex27( const char* msh_file )
 	// Each HEX element has 6 faces, if all HEX elements are disconnected we have num_elements * 6 faces being constructed
 	int max_num_faces = num_elements * 6;
  
+	printf("num_nodes = %d \n",num_nodes);
 
 	/* Initialization of edges[][], faces[][], and internals[][] arrays
 	*  Arrays are NUM_NODES x NUM_NODES, and are indexed based on the nodes associated with the edge, face, etc.
@@ -126,6 +131,10 @@ void toHex27( const char* msh_file )
 		edges[i] = (edge_t*) calloc(num_nodes, sizeof(edge_t));	
 	}
 
+	end = omp_get_wtime();
+	printf("JK_part2: %lf\n", (end-begin));
+	begin = omp_get_wtime();
+
 	face_t** faces = (face_t**) calloc(num_nodes, sizeof(face_t));
 	for(int i = 0; i < num_nodes; i++)
 	{
@@ -133,6 +142,10 @@ void toHex27( const char* msh_file )
 	}
 
 	internal_t** internals = malloc(num_elements * sizeof(internal_t*));
+
+	end = omp_get_wtime();
+	printf("JK_part3: %lf\n", (end-begin));
+	begin = omp_get_wtime();
 
 
 	// Iterate through all elements and count the number of HEX-8 elements present
@@ -157,7 +170,7 @@ void toHex27( const char* msh_file )
 		free(elem_frag);
 	}
 
-	double end = omp_get_wtime();
+	end = omp_get_wtime();
 
 	printf("Memory Setup: %lf\n", (end-begin));
 
