@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "hex8.h"
+#include "hex8_jk.h"
 
 int main( int argc, char* argv[] )
 {
