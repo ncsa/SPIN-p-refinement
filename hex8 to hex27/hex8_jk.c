@@ -1,10 +1,125 @@
 #include "hex8_jk.h"
 
+#define MAX_EDGES 12
+
 // Static vars
 static int num_edges = 0;
 static int edge_id = 0;
 static int num_faces = 0;
 static int num_internal = 0;
+
+void readHEX8( const char* msh_file, int* num_nodes, int* num_HEX8, NODE** mynodes, EL_HEX8** myHEX8 )
+{
+	double begin = omp_get_wtime();
+	printf("\tStart reading the msh file:\n");
+
+	// Attempt to open .msh file, return if failure
+	FILE * msh = fopen( msh_file, "r+" );
+	if( msh == NULL )
+	{
+		printf("Error opening %s\n", msh_file);
+		return;
+	}
+
+	char buff[256];
+
+	while (fgets(buff, 256, msh) != 0) {
+		//	Reading the nodal coordinates		
+		if( strcmp(buff, "$Nodes\n") == 0 ) {
+			fscanf(msh,"%d",num_nodes);
+			printf("\t\tnum_nodes = %d\n",*num_nodes);
+			NODE* tmp_NODE = (NODE*) malloc(*num_nodes * sizeof(NODE));
+			*mynodes= tmp_NODE;
+			for (int i=0; i< *num_nodes;i++) {
+				fscanf(msh,"%*d %g %g %g",&tmp_NODE[i].X[0],&tmp_NODE[i].X[1],&tmp_NODE[i].X[2]);
+			}
+		}
+		// Reading all element connectivity and then saving only HEX8 element connectivity
+		if( strcmp(buff, "$Elements\n") == 0 ) {
+			int num_all_elements;
+			fscanf(msh,"%d",&num_all_elements);	fgets(buff, 256, msh);
+			printf("\t\tnum_all_elements = %d\n",num_all_elements);
+			EL_HEX8* tmp_HEX8 = (EL_HEX8 *) malloc(num_all_elements * sizeof(EL_HEX8));
+			*num_HEX8 = 0;
+			int elem_id;
+			char str_IX[256];
+			for (int i=0;i< num_all_elements; i++) {
+				fgets(buff, 256, msh);
+				sscanf(buff,"%*d %d",&elem_id);
+				if (elem_id == 5) {
+					sscanf(buff,"%*d %*d %*d %*d %*d %d %d %d %d %d %d %d %d",&tmp_HEX8[*num_HEX8].nodeID[0],
+						&tmp_HEX8[*num_HEX8].nodeID[1],&tmp_HEX8[*num_HEX8].nodeID[2],&tmp_HEX8[*num_HEX8].nodeID[3],
+						&tmp_HEX8[*num_HEX8].nodeID[4],&tmp_HEX8[*num_HEX8].nodeID[5],&tmp_HEX8[*num_HEX8].nodeID[6],
+						&tmp_HEX8[*num_HEX8].nodeID[7]);
+					*num_HEX8 = *num_HEX8 + 1;
+				}
+			}
+			tmp_HEX8 = (EL_HEX8 *) realloc(tmp_HEX8, *num_HEX8*sizeof(EL_HEX8));
+			*myHEX8 = tmp_HEX8;
+			printf("\t\tnum_HEX8 = %d\n",*num_HEX8);
+		}
+	}
+
+	fclose(msh);
+	double end = omp_get_wtime();
+	printf("\t\tElapsed wall time: %lf sec\n", (end-begin));
+}
+
+
+void Construct_Edges_HEX8( int* num_edges, int* num_HEX8, ED_HEX8** myedges, EL_HEX8** myHEX8 )
+{
+	double begin = omp_get_wtime();
+	printf("\tStart constructing edge objects from HEX8 elements:\n");
+
+	int num_all_edges = *num_HEX8 * MAX_EDGES;			// The maximum number of edges including repeated edges
+	ED_HEX8* tmp_edges = (ED_HEX8*) malloc(num_all_edges * sizeof(ED_HEX8));
+
+	#pragma omp parallel for
+	for (int i=0; i<*num_HEX8; i++) {
+		// The 1st edge		
+		tmp_edges[0+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[0];
+		tmp_edges[0+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[1];
+		// The 2nd edge
+		tmp_edges[1+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[1];
+		tmp_edges[1+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[2];
+		// The 3rd edge
+		tmp_edges[2+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[2];
+		tmp_edges[2+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[3];
+		// The 4th edge
+		tmp_edges[3+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[3];
+		tmp_edges[3+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[0];
+		// The 5th edge
+		tmp_edges[4+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[0];
+		tmp_edges[4+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[4];
+		// The 6th edge
+		tmp_edges[5+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[1];
+		tmp_edges[5+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[5];
+		// The 7th edge
+		tmp_edges[6+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[2];
+		tmp_edges[6+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[6];
+		// The 8th edge
+		tmp_edges[7+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[3];
+		tmp_edges[7+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[7];
+		// The 9th edge
+		tmp_edges[8+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[4];
+		tmp_edges[8+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[5];
+		// The 10th edge
+		tmp_edges[9+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[5];
+		tmp_edges[0+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[6];
+		// The 11th edge
+		tmp_edges[10+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[6];
+		tmp_edges[10+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[7];
+		// The 12th edge
+		tmp_edges[11+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[7];
+		tmp_edges[11+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[4];
+	}
+
+
+
+	double end = omp_get_wtime();
+	printf("\t\tElapsed wall time: %lf sec\n", (end-begin));
+}
+
 
 void toHex27( const char* msh_file )
 {

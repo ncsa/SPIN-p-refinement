@@ -17,6 +17,80 @@
 #include <omp.h>
 
 /**
+ * @brief NODE object
+ *
+ * NODE object contains 3 coordinates for x, y, and z-axis
+ */
+typedef struct nodes {
+	float X[3]; 		/**< Nodal coordinates of this node */
+} NODE;
+
+
+/**
+ * @brief HEX8 object
+ *
+ * HEX8 object contains 8 node indices, 12 edge indices and 6 face indices
+ */
+typedef struct elements {
+	int nodeID[8]; 	/**< Node IDs contained in this element */
+	int edgeID[12]; 	/**< Edge IDs contained in this element */
+	int faceID[6];	   /**< Face IDs contained in this element */
+} EL_HEX8;
+
+/**
+ * @brief Edge object for HEX8
+ *
+ * Edge object for HEX8 contains 2 node indices, a global edge ID (myID) and a reference edge ID (refID)
+ */
+typedef struct edges {
+	int nodeID[2]; 	/**< Node IDs contained in this edge */
+	int myID;			/**< Global edge ID of this edge */
+	int refID;			/**< Reference edge ID that is the smallest edge ID that has the same nodeIDs as this edge */
+} ED_HEX8;
+
+/**
+ * @brief Face object for HEX8
+ *
+ * Face object for HEX8 contains 4 node indices and global facet ID
+ */
+typedef struct faces {
+	int nodeID[4]; 	/**< Node IDs contained in this face */
+	int myID;			/**< Global face ID of this face */
+	int refID;			/**< Reference face ID that is the smallest face ID that has the same nodeIDs as this face */
+} FA_HEX8;
+
+
+/**
+* Function to be called from main function that read a msh file
+* @author Dan Gross, JaeHyuk Kwack
+* @date 26 March 2018
+* @param msh_file .msh file to read data from
+* @param num_nodes number of nodes
+* @param num_HEX8 number of HEX8 elements
+* @param mynodes Node objects
+* @param myHEX8 HEX8 objects
+*/
+void readHEX8( const char* msh_file, int* num_nodes, int* num_HEX8, NODE** mynodes, EL_HEX8** myHEX8 );
+
+
+/**
+* Function to be called from main function that constructs edges from HEX8 elements
+* @author Dan Gross, JaeHyuk Kwack
+* @date 27 March 2018
+* @param num_edges number of edges
+* @param num_nodes number of nodes
+* @param num_HEX8 number of HEX8 elements
+* @param myedges Edge objects
+* @param myHEX8 HEX8 objects
+*/
+void Construct_Edges_HEX8( int* num_edges, int* num_HEX8, ED_HEX8** myedges, EL_HEX8** myHEX8 );
+
+
+
+
+
+
+/**
  * @brief Edge object
  *
  * Edge object contains universal node id and 3 double values representing the edge's cartesian coordinates
@@ -86,7 +160,7 @@ void toHex27( const char* msh_file );
 * @return char* representation of refined element
 */
 char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edges, face_t** faces, int num_elements, internal_t** internals, char* all_coords[num_elements * 19], char ** nodes, int n1, int n2, int n3, int n4, int n5, int n6, int n7, int n8 );
-*
+/*
 * Method that returns the edge object represented by the two nodes n1 and n2
 * @author Dan Gross
 * @date 30 July 2017
@@ -94,6 +168,7 @@ char * constructElem( char* elem_frag, int elem_id, int num_nodes, edge_t** edge
 * @param n2 Second node associated with edge
 * @param edges 2-D array storing all edge objects
 * @return Edge associated with the two nodes
+*/
 
 edge_t getEdge( int n1, int n2, edge_t ** edges );
 /**
