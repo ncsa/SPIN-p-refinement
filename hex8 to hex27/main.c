@@ -29,13 +29,13 @@ int main( int argc, char* argv[] )
 		ED_HEX8** myedges;
 		myedges = (ED_HEX8**) malloc(sizeof(ED_HEX8*));
 		// Constructing edges from HEX8 elements
-		Construct_Edges_HEX8(&num_edges, &num_HEX8, myedges, myHEX8);
+		Construct_Edges_HEX8(&num_nodes, &num_edges, &num_HEX8, myedges, myHEX8);
 
 
 
 
 
-		printf("Main NODE:%d\n",num_nodes);
+		printf("\n\n\nMain NODE:%d\n",num_nodes);
 		for (int i=num_nodes-1; i<num_nodes;i++) {
 			// printf("Main:%d:\n",i);
 			printf("Main NODE:%d %g %g %g\n",i+1,(*mynodes)[i].X[0],(*mynodes)[i].X[1],(*mynodes)[i].X[2]);

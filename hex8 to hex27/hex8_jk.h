@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <time.h>
 #include <omp.h>
 
@@ -34,7 +35,9 @@ typedef struct nodes {
 typedef struct elements {
 	int nodeID[8]; 	/**< Node IDs contained in this element */
 	int edgeID[12]; 	/**< Edge IDs contained in this element */
+	bool edgeDIR[12];	/**< If the local edge in this element has the same direction as the global edge */
 	int faceID[6];	   /**< Face IDs contained in this element */
+	bool faceDIR[6];	/**< If the local face in this element has the same direction as the global face */
 } EL_HEX8;
 
 /**
@@ -44,8 +47,6 @@ typedef struct elements {
  */
 typedef struct edges {
 	int nodeID[2]; 	/**< Node IDs contained in this edge */
-	int myID;			/**< Global edge ID of this edge */
-	int refID;			/**< Reference edge ID that is the smallest edge ID that has the same nodeIDs as this edge */
 } ED_HEX8;
 
 /**
@@ -77,16 +78,32 @@ void readHEX8( const char* msh_file, int* num_nodes, int* num_HEX8, NODE** mynod
 * Function to be called from main function that constructs edges from HEX8 elements
 * @author Dan Gross, JaeHyuk Kwack
 * @date 27 March 2018
+* @param num_nodes number of nodes
 * @param num_edges number of edges
 * @param num_nodes number of nodes
 * @param num_HEX8 number of HEX8 elements
 * @param myedges Edge objects
 * @param myHEX8 HEX8 objects
 */
-void Construct_Edges_HEX8( int* num_edges, int* num_HEX8, ED_HEX8** myedges, EL_HEX8** myHEX8 );
+void Construct_Edges_HEX8( int* num_nodes, int* num_edges, int* num_HEX8, ED_HEX8** myedges, EL_HEX8** myHEX8 );
 
+/**
+* Function that sorts nodes in the edge
+* @author Dan Gross, JaeHyuk Kwack
+* @date 27 March 2018
+* @param edge Edge object
+* @param flag If edge nodes are already ordered, the flag is 'true'. Otherwise, the flag is 'false'.
+*/
+void sort_edge_node( ED_HEX8* edge, bool* flag );
 
-
+/**
+* Function that returns unique components
+* @author Dan Gross, JaeHyuk Kwack
+* @date 29 March 2018
+* @param list the list possible containing repeated components
+* @param nlist number of components in the list
+*/
+void unique_int( int* list, int* nlist );
 
 
 
