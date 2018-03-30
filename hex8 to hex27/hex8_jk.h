@@ -62,7 +62,7 @@ typedef struct edges {
  */
 typedef struct faces {
 	int nodeID[4]; 	/**< Node IDs contained in this face */
-	int min_nodeID;	/**< The smallest Node ID contained in this face */
+	int IDmin_nodeID;	/**< The index of the smallest Node ID contained in this face */
 } FA_HEX8;
 
 
@@ -142,7 +142,13 @@ void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes
 */
 void Construct_Faces_HEX8( int* num_nodes, int* num_faces, int* num_HEX8, FA_HEX8** myfaces, EL_HEX8** myHEX8 );
 
-
+/**
+* Function that finds the index of the smallest nodeID in the face
+* @author Dan Gross, JaeHyuk Kwack
+* @date 30 March 2018
+* @param face Face object
+*/
+void find_IDmin_nodeID( FA_HEX8* face);
 
 
 

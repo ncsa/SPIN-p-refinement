@@ -301,7 +301,6 @@ void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes
 }
 
 
-
 void sort_edge_node( ED_HEX8* edge, bool* flag )
 {
 	int tmp;
@@ -397,12 +396,16 @@ void Construct_Faces_HEX8( int* num_nodes, int* num_faces, int* num_HEX8, FA_HEX
 			tmp_faces[5+i*MAX_FACES].nodeID[3] = (*myHEX8)[i].nodeID[7];
 		}
 
-	// 	#pragma omp for 					// Copying tmp_edges to ref_edges and then sorting nodeID of tmp_edges
-	// 	for (int i=0; i<*num_HEX8; i++) {
-	// 		for(int j=0; j<MAX_EDGES; j++) {
-	// 			sort_edge_node(&(tmp_edges[ j+i*MAX_EDGES ]), &((*myHEX8)[i].edgeDIR[j]) );
-	// 		}
-	// 	}	
+		#pragma omp for 					// Finding IDmin_nodeID in Face objects
+		for (int i=0; i<*num_HEX8; i++) {
+			for(int j=0; j<MAX_FACES; j++) {
+				find_IDmin_nodeID( &(tmp_faces[ j+i*MAX_FACES]) );
+				// printf(" %d %d %d %d : %d\n",tmp_faces[j+i*MAX_FACES].nodeID[0]
+				// 	,tmp_faces[j+i*MAX_FACES].nodeID[1],tmp_faces[j+i*MAX_FACES].nodeID[2]
+				// 	,tmp_faces[j+i*MAX_FACES].nodeID[3]
+				// 	,tmp_faces[j+i*MAX_FACES].nodeID[ tmp_faces[j+i*MAX_FACES].IDmin_nodeID ]);
+			}
+		}	
 
 	// 	#pragma omp for 					// Initializing nlink_edges
 	// 	for (int i=0; i<*num_nodes; i++) {
@@ -504,6 +507,15 @@ void Construct_Faces_HEX8( int* num_nodes, int* num_faces, int* num_HEX8, FA_HEX
 }
 
 
+void find_IDmin_nodeID( FA_HEX8* face)
+{
+	(*face).IDmin_nodeID = 0;
+	for (int i=1; i<4; i++) {
+		if ( (*face).nodeID[i] < (*face).nodeID[ (*face).IDmin_nodeID ] ) {
+			(*face).IDmin_nodeID = i;
+		}
+	}
+}
 
 
 
