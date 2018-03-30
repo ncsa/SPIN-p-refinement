@@ -243,9 +243,10 @@ void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes
 	int num_additional_nodes = (order - 1)* (*num_edges);
 	NODE* mynodes_new_edge = (NODE*) malloc(num_additional_nodes * sizeof(NODE));
 	int* additional_IX_edge = (int*) malloc( (order-1)*MAX_EDGES*(*num_HEX8) * sizeof(int));
-	int here;	
+	int here,edgeID;
+	bool edgeDIR;
 
-	#pragma omp parallel default(shared) private(here)
+	#pragma omp parallel default(shared) private(here,edgeID,edgeDIR)
 	{
 		#pragma omp for 			// Create additinoal nodes
 		for (int i=0; i< *num_edges; i++) {
@@ -256,15 +257,31 @@ void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes
 				for (int k=0; k <NDM; k++) {
 					mynodes_new_edge[here].X[k] = (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] + 
 						( (*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[k] - (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] )/order*(j+1);	
-
 				}
 				// printf( "  %d   : %f %f %f \n",j,mynodes_new_edge[here].X[0]
 				// 	, mynodes_new_edge[here].X[1],mynodes_new_edge[here].X[2]  );
-
 			}
 			// printf( " right: %f %f %f \n",(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[0]
 			// 	,(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[1],(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[2]  );
+		}
 
+		#pragma omp for 			// Create additional_IX_edge
+		for (int i=0; i< *num_HEX8; i++) {
+			for (int j=0; j< MAX_EDGES; j++) {
+				edgeID = (*myHEX8)[i].edgeID[j];
+				edgeDIR = (*myHEX8)[i].edgeDIR[j];
+				// printf(" Nodes on edge %d, DIR %d : %d |",edgeID,edgeDIR,(*myedges)[edgeID].nodeID[0]);
+				for (int k=0; k<order-1; k++) {
+					here = k + j*(order-1) + i*MAX_EDGES*(order-1);
+					if (edgeDIR) {
+						additional_IX_edge[here] = *num_nodes + edgeID*(order-1) + k;
+					} else {
+						additional_IX_edge[here] = *num_nodes + (edgeID+1)*(order-1) - k - 1;
+					}
+					// printf(" %d ",additional_IX_edge[here]);
+				}
+				// printf(" | %d \n",(*myedges)[edgeID].nodeID[1]);
+			}
 		}
 
 
