@@ -18,6 +18,7 @@
 #include <omp.h>
 
 #define MAX_EDGES 12
+#define MAX_FACES 6
 #define NDM 3
 
 /**
@@ -41,6 +42,7 @@ typedef struct elements {
 	bool edgeDIR[12];	/**< If the local edge in this element has the same direction as the global edge */
 	int faceID[6];	   /**< Face IDs contained in this element */
 	bool faceDIR[6];	/**< If the local face in this element has the same direction as the global face */
+	int faceROT[6]; 	/**< Required rotation of the local face in this element related to the global face (e.g., 0, 1, 2, 3) */
 } EL_HEX8;
 
 /**
@@ -56,12 +58,10 @@ typedef struct edges {
 /**
  * @brief Face object for HEX8
  *
- * Face object for HEX8 contains 4 node indices and global facet ID
+ * Face object for HEX8 contains 4 node indices
  */
 typedef struct faces {
 	int nodeID[4]; 	/**< Node IDs contained in this face */
-	int myID;			/**< Global face ID of this face */
-	int refID;			/**< Reference face ID that is the smallest face ID that has the same nodeIDs as this face */
 } FA_HEX8;
 
 
@@ -126,6 +126,24 @@ void unique_int( int* list, int* nlist );
 void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes,
 	ED_HEX8** myedges, EL_HEX8** myHEX8, int order, int* num_new_nodes_edges,
 	NODE** mynewnodes_edge,int** new_IX_edge);
+
+
+/**
+* Function to be called from main function that constructs faces from HEX8 elements
+* @author Dan Gross, JaeHyuk Kwack
+* @date 30 March 2018
+* @param num_nodes number of nodes
+* @param num_faces number of faces
+* @param num_nodes number of nodes
+* @param num_HEX8 number of HEX8 elements
+* @param myfaces Face objects
+* @param myHEX8 HEX8 objects
+*/
+void Construct_Faces_HEX8( int* num_nodes, int* num_faces, int* num_HEX8, FA_HEX8** myfaces, EL_HEX8** myHEX8 );
+
+
+
+
 
 
 /**

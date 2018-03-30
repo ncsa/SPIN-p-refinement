@@ -30,6 +30,17 @@ int main( int argc, char* argv[] )
 		// Constructing edges from HEX8 elements
 		Construct_Edges_HEX8(&num_nodes, &num_edges, &num_HEX8, myedges, myHEX8);
 
+		int num_faces = 0;
+		FA_HEX8** myfaces;
+		myfaces = (FA_HEX8**) malloc(sizeof(FA_HEX8*));
+		// Constructing faces from HEX8 elements
+		Construct_Faces_HEX8(&num_nodes, &num_faces, &num_HEX8, myfaces, myHEX8);		
+
+
+
+
+
+		// Refinement of edges
 		int num_new_nodes_edges, here, edgeID, order;
 		bool edgeDIR;
 		NODE** mynewnodes_edge;
