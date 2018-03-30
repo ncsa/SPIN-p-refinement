@@ -32,32 +32,32 @@ int main( int argc, char* argv[] )
 
 
 		// Refinement of edges
-		// int num_new_nodes_edges, here, edgeID, order;
-		// bool edgeDIR;
-		// NODE** mynewnodes_edge;
-		// mynewnodes_edge = (NODE**) malloc(sizeof(NODE*));
-		// int** new_IX_edge;
-		// new_IX_edge = (int **) malloc(sizeof(int*));
+		int num_new_nodes_edges, here, edgeID, order;
+		bool edgeDIR;
+		NODE** mynewnodes_edge;
+		mynewnodes_edge = (NODE**) malloc(sizeof(NODE*));
+		int** new_IX_edge;
+		new_IX_edge = (int **) malloc(sizeof(int*));
 
-		// order = 2;
-		// Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
-		// 								&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
+		order = 2;
+		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
-		// order = 3;
-		// Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
-		// 								&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
+		order = 3;
+		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
-		// order = 4;
-		// Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
-		// 								&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
+		order = 4;
+		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
-		// order = 5;
-		// Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
-		// 								&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
+		order = 5;
+		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
-		// order = 10;
-		// Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
-		// 								&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
+		order = 10;
+		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
 
 		// for (int i=0; i< num_edges; i++) {

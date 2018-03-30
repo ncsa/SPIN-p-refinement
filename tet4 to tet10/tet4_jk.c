@@ -215,70 +215,70 @@ void Construct_Edges_TET4( int* num_nodes, int* num_edges, int* num_TET4, ED_TET
 
 
 
-// void Refine_Edges( int* num_nodes, int* num_edges, int* num_TET4, NODE** mynodes, ED_TET4** myedges,
-// 	EL_TET4** myTET4, int order, int* num_new_nodes_edges, NODE** mynewnodes_edge,int** new_IX_edge)
-// {
-// 	double begin = omp_get_wtime();
-// 	printf("\tStart p-refinement from O(1) to O(%d) for edge objects:\n",order);
+void Refine_Edges( int* num_nodes, int* num_edges, int* num_TET4, NODE** mynodes, ED_TET4** myedges,
+	EL_TET4** myTET4, int order, int* num_new_nodes_edges, NODE** mynewnodes_edge,int** new_IX_edge)
+{
+	double begin = omp_get_wtime();
+	printf("\tStart p-refinement from O(1) to O(%d) for edge objects:\n",order);
 
-// 	int num_additional_nodes = (order - 1)* (*num_edges);
-// 	*num_new_nodes_edges = num_additional_nodes;
-// 	NODE* mynodes_new_edge = (NODE*) malloc(num_additional_nodes * sizeof(NODE));
-// 	*mynewnodes_edge = mynodes_new_edge;
-// 	int* additional_IX_edge = (int*) malloc( (order-1)*MAX_EDGES*(*num_TET4) * sizeof(int));
-// 	*new_IX_edge = additional_IX_edge;
-// 	int here,edgeID;
-// 	bool edgeDIR;
+	int num_additional_nodes = (order - 1)* (*num_edges);
+	*num_new_nodes_edges = num_additional_nodes;
+	NODE* mynodes_new_edge = (NODE*) malloc(num_additional_nodes * sizeof(NODE));
+	*mynewnodes_edge = mynodes_new_edge;
+	int* additional_IX_edge = (int*) malloc( (order-1)*MAX_EDGES*(*num_TET4) * sizeof(int));
+	*new_IX_edge = additional_IX_edge;
+	int here,edgeID;
+	bool edgeDIR;
 
-// 	#pragma omp parallel default(shared) private(here,edgeID,edgeDIR)
-// 	{
-// 		#pragma omp for 			// Create additinoal nodes
-// 		for (int i=0; i< *num_edges; i++) {
-// 			// printf( "  left: %f %f %f \n",(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[0]
-// 			// 	,(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[1],(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[2]  );
-// 			for (int j=0; j< order-1; j++) {
-// 				here = j + i*(order-1);
-// 				for (int k=0; k <NDM; k++) {
-// 					mynodes_new_edge[here].X[k] = (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] + 
-// 						( (*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[k] - (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] )/order*(j+1);	
-// 				}
-// 				// printf( "  %d   : %f %f %f \n",j,mynodes_new_edge[here].X[0]
-// 				// 	, mynodes_new_edge[here].X[1],mynodes_new_edge[here].X[2]  );
-// 			}
-// 			// printf( " right: %f %f %f \n",(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[0]
-// 			// 	,(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[1],(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[2]  );
-// 		}
+	#pragma omp parallel default(shared) private(here,edgeID,edgeDIR)
+	{
+		#pragma omp for 			// Create additinoal nodes
+		for (int i=0; i< *num_edges; i++) {
+			// printf( "  left: %f %f %f \n",(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[0]
+			// 	,(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[1],(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[2]  );
+			for (int j=0; j< order-1; j++) {
+				here = j + i*(order-1);
+				for (int k=0; k <NDM; k++) {
+					mynodes_new_edge[here].X[k] = (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] + 
+						( (*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[k] - (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] )/order*(j+1);	
+				}
+				// printf( "  %d   : %f %f %f \n",j,mynodes_new_edge[here].X[0]
+				// 	, mynodes_new_edge[here].X[1],mynodes_new_edge[here].X[2]  );
+			}
+			// printf( " right: %f %f %f \n",(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[0]
+			// 	,(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[1],(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[2]  );
+		}
 
-// 		#pragma omp for 			// Create additional_IX_edge
-// 		for (int i=0; i< *num_TET4; i++) {
-// 			for (int j=0; j< MAX_EDGES; j++) {
-// 				edgeID = (*myTET4)[i].edgeID[j];
-// 				edgeDIR = (*myTET4)[i].edgeDIR[j];
-// 				// printf(" Nodes on edge %d, DIR %d : %d |",edgeID,edgeDIR,(*myedges)[edgeID].nodeID[0]);
-// 				for (int k=0; k<order-1; k++) {
-// 					here = k + j*(order-1) + i*MAX_EDGES*(order-1);
-// 					if (edgeDIR) {
-// 						additional_IX_edge[here] = *num_nodes + edgeID*(order-1) + k;
-// 					} else {
-// 						additional_IX_edge[here] = *num_nodes + (edgeID+1)*(order-1) - k - 1;
-// 					}
-// 					// printf(" %d ",additional_IX_edge[here]);
-// 				}
-// 				// printf(" | %d \n",(*myedges)[edgeID].nodeID[1]);
-// 			}
-// 		}
-
-
-
-
-// 	}
+		#pragma omp for 			// Create additional_IX_edge
+		for (int i=0; i< *num_TET4; i++) {
+			for (int j=0; j< MAX_EDGES; j++) {
+				edgeID = (*myTET4)[i].edgeID[j];
+				edgeDIR = (*myTET4)[i].edgeDIR[j];
+				// printf(" Nodes on edge %d, DIR %d : %d |",edgeID,edgeDIR,(*myedges)[edgeID].nodeID[0]);
+				for (int k=0; k<order-1; k++) {
+					here = k + j*(order-1) + i*MAX_EDGES*(order-1);
+					if (edgeDIR) {
+						additional_IX_edge[here] = *num_nodes + edgeID*(order-1) + k;
+					} else {
+						additional_IX_edge[here] = *num_nodes + (edgeID+1)*(order-1) - k - 1;
+					}
+					// printf(" %d ",additional_IX_edge[here]);
+				}
+				// printf(" | %d \n",(*myedges)[edgeID].nodeID[1]);
+			}
+		}
 
 
 
-// 	double end = omp_get_wtime();
-// 	printf("\t\tnum_additional_nodes = %d\n",num_additional_nodes);
-// 	printf("\t\tElapsed wall time: %lf sec\n\n", (end-begin));
-// }
+
+	}
+
+
+
+	double end = omp_get_wtime();
+	printf("\t\tnum_additional_nodes = %d\n",num_additional_nodes);
+	printf("\t\tElapsed wall time: %lf sec\n\n", (end-begin));
+}
 
 
 void sort_edge_node( ED_TET4* edge, bool* flag )

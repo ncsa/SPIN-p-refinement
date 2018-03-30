@@ -99,7 +99,7 @@ void unique_int( int* list, int* nlist );
 /**
 * Function to be called from main function that constructs edges from TET4 elements
 * @author Dan Gross, JaeHyuk Kwack
-* @date 27 March 2018
+* @date 30 March 2018
 * @param num_nodes number of nodes
 * @param num_edges number of edges
 * @param num_nodes number of nodes
@@ -109,9 +109,9 @@ void unique_int( int* list, int* nlist );
 * @param myTET4 TET4 objects
 * @param order Order for p-refinement (e.g., 2 for O(2), 3 for O(3) and n for O(n) )
 */
-// void Refine_Edges( int* num_nodes, int* num_edges, int* num_TET4, NODE** mynodes,
-// 	ED_TET4** myedges, EL_TET4** myTET4, int order, int* num_new_nodes_edges,
-// 	NODE** mynewnodes_edge,int** new_IX_edge);
+void Refine_Edges( int* num_nodes, int* num_edges, int* num_TET4, NODE** mynodes,
+	ED_TET4** myedges, EL_TET4** myTET4, int order, int* num_new_nodes_edges,
+	NODE** mynewnodes_edge,int** new_IX_edge);
 
 
 #endif
