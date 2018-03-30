@@ -65,52 +65,52 @@ void readTET4( const char* msh_file, int* num_nodes, int* num_TET4, NODE** mynod
 
 
 /**
-* Function to be called from main function that constructs edges from HEX8 elements
+* Function to be called from main function that constructs edges from TET4 elements
 * @author Dan Gross, JaeHyuk Kwack
-* @date 27 March 2018
+* @date 30 March 2018
 * @param num_nodes number of nodes
 * @param num_edges number of edges
 * @param num_nodes number of nodes
-* @param num_HEX8 number of HEX8 elements
+* @param num_TET4 number of TET4 elements
 * @param myedges Edge objects
-* @param myHEX8 HEX8 objects
+* @param myTET4 TET4 objects
 */
-// void Construct_Edges_HEX8( int* num_nodes, int* num_edges, int* num_HEX8, ED_HEX8** myedges, EL_HEX8** myHEX8 );
+void Construct_Edges_TET4( int* num_nodes, int* num_edges, int* num_TET4, ED_TET4** myedges, EL_TET4** myTET4 );
 
 /**
 * Function that sorts nodes in the edge
 * @author Dan Gross, JaeHyuk Kwack
-* @date 27 March 2018
+* @date 30 March 2018
 * @param edge Edge object
 * @param flag If edge nodes are already ordered, the flag is 'true'. Otherwise, the flag is 'false'.
 */
-// void sort_edge_node( ED_HEX8* edge, bool* flag );
+void sort_edge_node( ED_TET4* edge, bool* flag );
 
 /**
 * Function that returns unique components
 * @author Dan Gross, JaeHyuk Kwack
-* @date 29 March 2018
+* @date 30 March 2018
 * @param list the list possible containing repeated components
 * @param nlist number of components in the list
 */
-// void unique_int( int* list, int* nlist );
+void unique_int( int* list, int* nlist );
 
 
 /**
-* Function to be called from main function that constructs edges from HEX8 elements
+* Function to be called from main function that constructs edges from TET4 elements
 * @author Dan Gross, JaeHyuk Kwack
 * @date 27 March 2018
 * @param num_nodes number of nodes
 * @param num_edges number of edges
 * @param num_nodes number of nodes
-* @param num_HEX8 number of HEX8 elements
+* @param num_TET4 number of TET4 elements
 * @param mynodes Node objects
 * @param myedges Edge objects
-* @param myHEX8 HEX8 objects
-* @param order Order for p-refinement (e.g., 2 for HEX27, 3 for HEX64, 4 for HEX125, 5 for HEX216, and n for HEX(n+1)^3)
+* @param myTET4 TET4 objects
+* @param order Order for p-refinement (e.g., 2 for O(2), 3 for O(3) and n for O(n) )
 */
-// void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes,
-// 	ED_HEX8** myedges, EL_HEX8** myHEX8, int order, int* num_new_nodes_edges,
+// void Refine_Edges( int* num_nodes, int* num_edges, int* num_TET4, NODE** mynodes,
+// 	ED_TET4** myedges, EL_TET4** myTET4, int order, int* num_new_nodes_edges,
 // 	NODE** mynewnodes_edge,int** new_IX_edge);
 
 
