@@ -43,19 +43,19 @@ int main( int argc, char* argv[] )
 		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
 										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
-		order = 3;
-		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
-										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
-
 		order = 4;
 		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
 										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
-		order = 5;
+		order = 8;
 		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
 										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
-		order = 10;
+		order = 16;
+		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
+
+		order = 32;
 		Refine_Edges(&num_nodes, &num_edges, &num_TET4, mynodes, myedges, myTET4, order,
 										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
