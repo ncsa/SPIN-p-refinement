@@ -235,14 +235,18 @@ void Construct_Edges_HEX8( int* num_nodes, int* num_edges, int* num_HEX8, ED_HEX
 
 
 
-void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes, ED_HEX8** myedges, EL_HEX8** myHEX8, int order)
+void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes, ED_HEX8** myedges,
+	EL_HEX8** myHEX8, int order, int* num_new_nodes_edges, NODE** mynewnodes_edge,int** new_IX_edge)
 {
 	double begin = omp_get_wtime();
 	printf("\tStart p-refinement from O(1) to O(%d) for edge objects:\n",order);
 
 	int num_additional_nodes = (order - 1)* (*num_edges);
+	*num_new_nodes_edges = num_additional_nodes;
 	NODE* mynodes_new_edge = (NODE*) malloc(num_additional_nodes * sizeof(NODE));
+	*mynewnodes_edge = mynodes_new_edge;
 	int* additional_IX_edge = (int*) malloc( (order-1)*MAX_EDGES*(*num_HEX8) * sizeof(int));
+	*new_IX_edge = additional_IX_edge;
 	int here,edgeID;
 	bool edgeDIR;
 
@@ -292,7 +296,7 @@ void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes
 
 
 	double end = omp_get_wtime();
-	printf("\t\tnum_edges = %d\n",*num_edges);
+	printf("\t\tnum_additional_nodes = %d\n",num_additional_nodes);
 	printf("\t\tElapsed wall time: %lf sec\n\n", (end-begin));
 }
 

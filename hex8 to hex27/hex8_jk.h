@@ -123,7 +123,9 @@ void unique_int( int* list, int* nlist );
 * @param myHEX8 HEX8 objects
 * @param order Order for p-refinement (e.g., 2 for HEX27, 3 for HEX64, and 4 for HEX125)
 */
-void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes, ED_HEX8** myedges, EL_HEX8** myHEX8, int order);
+void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes,
+	ED_HEX8** myedges, EL_HEX8** myHEX8, int order, int* num_new_nodes_edges,
+	NODE** mynewnodes_edge,int** new_IX_edge);
 
 
 /**
