@@ -121,7 +121,7 @@ void unique_int( int* list, int* nlist );
 * @param mynodes Node objects
 * @param myedges Edge objects
 * @param myHEX8 HEX8 objects
-* @param order Order for p-refinement (e.g., 2 for HEX27, 3 for HEX64, and 4 for HEX125)
+* @param order Order for p-refinement (e.g., 2 for HEX27, 3 for HEX64, 4 for HEX125, 5 for HEX216, and n for HEX(n+1)^3)
 */
 void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes,
 	ED_HEX8** myedges, EL_HEX8** myHEX8, int order, int* num_new_nodes_edges,

@@ -49,6 +49,13 @@ int main( int argc, char* argv[] )
 		Refine_Edges(&num_nodes, &num_edges, &num_HEX8, mynodes, myedges, myHEX8, order,
 										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
+		order = 5;
+		Refine_Edges(&num_nodes, &num_edges, &num_HEX8, mynodes, myedges, myHEX8, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
+
+		order = 10;
+		Refine_Edges(&num_nodes, &num_edges, &num_HEX8, mynodes, myedges, myHEX8, order,
+										&num_new_nodes_edges, mynewnodes_edge, new_IX_edge);
 
 
 		// for (int i=0; i< num_edges; i++) {
