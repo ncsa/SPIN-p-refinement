@@ -24,7 +24,6 @@ int main( int argc, char* argv[] )
 		// Reading the input file: serial process
 		readHEX8( argv[1],&num_nodes,&num_HEX8,mynodes,myHEX8 );
 
-
 		int num_edges = 0;
 		ED_HEX8** myedges;
 		myedges = (ED_HEX8**) malloc(sizeof(ED_HEX8*));
@@ -32,6 +31,22 @@ int main( int argc, char* argv[] )
 		Construct_Edges_HEX8(&num_nodes, &num_edges, &num_HEX8, myedges, myHEX8);
 
 
+		Refine_Edges(&num_nodes, &num_edges, &num_HEX8, mynodes, myedges, myHEX8, 2);
+
+		Refine_Edges(&num_nodes, &num_edges, &num_HEX8, mynodes, myedges, myHEX8, 3);		
+
+		Refine_Edges(&num_nodes, &num_edges, &num_HEX8, mynodes, myedges, myHEX8, 4);		
+
+		// for (int i=0; i <num_edges; i++) {
+		// 	printf (" %d : %d, %d \n",i,(*myedges)[i].nodeID[0],(*myedges)[i].nodeID[1]);
+		// }
+		// for (int i=0; i <num_HEX8; i++) {
+		// 	printf ("\n %d : ",i);
+		// 	for (int j=0; j < MAX_EDGES; j++) {
+		// 		printf(" (%d, %d)", (*myHEX8)[i].edgeID[j], (*myHEX8)[i].edgeDIR[j]);
+		// 	}
+		// }
+		// printf("\n");
 
 
 

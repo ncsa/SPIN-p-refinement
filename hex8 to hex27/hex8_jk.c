@@ -1,6 +1,5 @@
 #include "hex8_jk.h"
 
-#define MAX_EDGES 12
 
 // Static vars
 static int num_edges = 0;
@@ -86,7 +85,7 @@ void Construct_Edges_HEX8( int* num_nodes, int* num_edges, int* num_HEX8, ED_HEX
 	int sum_tmp = 0, sum_tmp2=0;
 	int here;	
 
-	#pragma omp parallel default(shared)
+	#pragma omp parallel default(shared) private(here)
 	{
 		#pragma omp for  						// Filling nodeID of myedges 
 		for (int i=0; i<*num_HEX8; i++) {
@@ -228,6 +227,52 @@ void Construct_Edges_HEX8( int* num_nodes, int* num_edges, int* num_HEX8, ED_HEX
 	// 	}
 	// }
 	// printf("\n");
+
+	double end = omp_get_wtime();
+	printf("\t\tnum_edges = %d\n",*num_edges);
+	printf("\t\tElapsed wall time: %lf sec\n\n", (end-begin));
+}
+
+
+
+void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes, ED_HEX8** myedges, EL_HEX8** myHEX8, int order)
+{
+	double begin = omp_get_wtime();
+	printf("\tStart p-refinement from O(1) to O(%d) for edge objects:\n",order);
+
+	int num_additional_nodes = (order - 1)* (*num_edges);
+	NODE* mynodes_new_edge = (NODE*) malloc(num_additional_nodes * sizeof(NODE));
+	int* additional_IX_edge = (int*) malloc( (order-1)*MAX_EDGES*(*num_HEX8) * sizeof(int));
+	int here;	
+
+	#pragma omp parallel default(shared) private(here)
+	{
+		#pragma omp for 			// Create additinoal nodes
+		for (int i=0; i< *num_edges; i++) {
+			// printf( "  left: %f %f %f \n",(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[0]
+			// 	,(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[1],(*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[2]  );
+			for (int j=0; j< order-1; j++) {
+				here = j + i*(order-1);
+				for (int k=0; k <NDM; k++) {
+					mynodes_new_edge[here].X[k] = (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] + 
+						( (*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[k] - (*mynodes)[ (*myedges)[i].nodeID[0] - 1 ].X[k] )/order*(j+1);	
+
+				}
+				// printf( "  %d   : %f %f %f \n",j,mynodes_new_edge[here].X[0]
+				// 	, mynodes_new_edge[here].X[1],mynodes_new_edge[here].X[2]  );
+
+			}
+			// printf( " right: %f %f %f \n",(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[0]
+			// 	,(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[1],(*mynodes)[ (*myedges)[i].nodeID[1] - 1 ].X[2]  );
+
+		}
+
+
+
+
+	}
+
+
 
 	double end = omp_get_wtime();
 	printf("\t\tnum_edges = %d\n",*num_edges);

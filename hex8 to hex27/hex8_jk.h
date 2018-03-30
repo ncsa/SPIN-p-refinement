@@ -17,13 +17,16 @@
 #include <time.h>
 #include <omp.h>
 
+#define MAX_EDGES 12
+#define NDM 3
+
 /**
  * @brief NODE object
  *
  * NODE object contains 3 coordinates for x, y, and z-axis
  */
 typedef struct nodes {
-	float X[3]; 		/**< Nodal coordinates of this node */
+	float X[NDM]; 		/**< Nodal coordinates of this node */
 } NODE;
 
 
@@ -43,11 +46,12 @@ typedef struct elements {
 /**
  * @brief Edge object for HEX8
  *
- * Edge object for HEX8 contains 2 node indices, a global edge ID (myID) and a reference edge ID (refID)
+ * Edge object for HEX8 contains 2 node indices
  */
 typedef struct edges {
 	int nodeID[2]; 	/**< Node IDs contained in this edge */
 } ED_HEX8;
+
 
 /**
  * @brief Face object for HEX8
@@ -105,6 +109,21 @@ void sort_edge_node( ED_HEX8* edge, bool* flag );
 */
 void unique_int( int* list, int* nlist );
 
+
+/**
+* Function to be called from main function that constructs edges from HEX8 elements
+* @author Dan Gross, JaeHyuk Kwack
+* @date 27 March 2018
+* @param num_nodes number of nodes
+* @param num_edges number of edges
+* @param num_nodes number of nodes
+* @param num_HEX8 number of HEX8 elements
+* @param mynodes Node objects
+* @param myedges Edge objects
+* @param myHEX8 HEX8 objects
+* @param order Order for p-refinement (e.g., 2 for HEX27, 3 for HEX64, and 4 for HEX125)
+*/
+void Refine_Edges( int* num_nodes, int* num_edges, int* num_HEX8, NODE** mynodes, ED_HEX8** myedges, EL_HEX8** myHEX8, int order);
 
 
 /**
