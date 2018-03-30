@@ -62,6 +62,7 @@ typedef struct edges {
  */
 typedef struct faces {
 	int nodeID[4]; 	/**< Node IDs contained in this face */
+	int min_nodeID;	/**< The smallest Node ID contained in this face */
 } FA_HEX8;
 
 

@@ -346,11 +346,11 @@ void Construct_Faces_HEX8( int* num_nodes, int* num_faces, int* num_HEX8, FA_HEX
 	double begin = omp_get_wtime();
 	printf("\tStart constructing face objects from HEX8 elements:\n");
 
-	// int num_all_edges = *num_HEX8 * MAX_EDGES;			// The maximum number of edges including repeated edges
-	// ED_HEX8* tmp_edges = (ED_HEX8*) malloc(num_all_edges * sizeof(ED_HEX8));
-	// ED_HEX8* unique_edges;
-	// // 0-based CSR format
-	// int *nlink_edges, *link_edges_ptr, *link_edges_ind, *tmp_count;
+	int num_all_faces = *num_HEX8 * MAX_FACES;			// The maximum number of faces including repeated edges
+	FA_HEX8* tmp_faces = (FA_HEX8*) malloc(num_all_faces * sizeof(FA_HEX8));
+	// FA_HEX8* unique_faces;
+	// 0-based CSR format
+	// int *nlink_faces, *link_faces_ptr, *link_faces_ind, *tmp_count;
 	// int *link_edges_ptr_unique, *link_edges_ind_unique;
 	// nlink_edges = (int*) malloc(*num_nodes * sizeof(int));
 	// link_edges_ptr = (int*) malloc( (*num_nodes +1) * sizeof(int));				// CSR pointer for link_edges
@@ -359,49 +359,43 @@ void Construct_Faces_HEX8( int* num_nodes, int* num_faces, int* num_HEX8, FA_HEX
 	// link_edges_ind_unique = (int*) malloc(num_all_edges * sizeof(int));			// Another node ID of the edge after donig unique()
 	// tmp_count = (int*) malloc(*num_nodes * sizeof(int));
 	// int sum_tmp = 0, sum_tmp2=0;
-	// int here;	
+	int here;
 
-	// #pragma omp parallel default(shared) private(here)
-	// {
-	// 	#pragma omp for  						// Filling nodeID of myedges 
-	// 	for (int i=0; i<*num_HEX8; i++) {
-	// 		// The 1st edge		
-	// 		tmp_edges[0+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[0];
-	// 		tmp_edges[0+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[1];
-	// 		// The 2nd edge
-	// 		tmp_edges[1+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[1];
-	// 		tmp_edges[1+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[2];
-	// 		// The 3rd edge
-	// 		tmp_edges[2+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[2];
-	// 		tmp_edges[2+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[3];
-	// 		// The 4th edge
-	// 		tmp_edges[3+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[3];
-	// 		tmp_edges[3+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[0];
-	// 		// The 5th edge
-	// 		tmp_edges[4+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[0];
-	// 		tmp_edges[4+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[4];
-	// 		// The 6th edge
-	// 		tmp_edges[5+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[1];
-	// 		tmp_edges[5+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[5];
-	// 		// The 7th edge
-	// 		tmp_edges[6+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[2];
-	// 		tmp_edges[6+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[6];
-	// 		// The 8th edge
-	// 		tmp_edges[7+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[3];
-	// 		tmp_edges[7+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[7];
-	// 		// The 9th edge
-	// 		tmp_edges[8+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[4];
-	// 		tmp_edges[8+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[5];
-	// 		// The 10th edge
-	// 		tmp_edges[9+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[5];
-	// 		tmp_edges[9+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[6];
-	// 		// The 11th edge
-	// 		tmp_edges[10+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[6];
-	// 		tmp_edges[10+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[7];
-	// 		// The 12th edge
-	// 		tmp_edges[11+i*MAX_EDGES].nodeID[0] = (*myHEX8)[i].nodeID[7];
-	// 		tmp_edges[11+i*MAX_EDGES].nodeID[1] = (*myHEX8)[i].nodeID[4];
-	// 	}
+	#pragma omp parallel default(shared) private(here)
+	{
+		#pragma omp for  						// Filling nodeID of myfaces
+		for (int i=0; i<*num_HEX8; i++) {
+			// The 1st faces
+			tmp_faces[0+i*MAX_FACES].nodeID[0] = (*myHEX8)[i].nodeID[0];
+			tmp_faces[0+i*MAX_FACES].nodeID[1] = (*myHEX8)[i].nodeID[1];
+			tmp_faces[0+i*MAX_FACES].nodeID[2] = (*myHEX8)[i].nodeID[2];
+			tmp_faces[0+i*MAX_FACES].nodeID[3] = (*myHEX8)[i].nodeID[3];
+			// The 2nd faces
+			tmp_faces[1+i*MAX_FACES].nodeID[0] = (*myHEX8)[i].nodeID[0];
+			tmp_faces[1+i*MAX_FACES].nodeID[1] = (*myHEX8)[i].nodeID[1];
+			tmp_faces[1+i*MAX_FACES].nodeID[2] = (*myHEX8)[i].nodeID[5];
+			tmp_faces[1+i*MAX_FACES].nodeID[3] = (*myHEX8)[i].nodeID[4];
+			// The 3rd faces
+			tmp_faces[2+i*MAX_FACES].nodeID[0] = (*myHEX8)[i].nodeID[3];
+			tmp_faces[2+i*MAX_FACES].nodeID[1] = (*myHEX8)[i].nodeID[0];
+			tmp_faces[2+i*MAX_FACES].nodeID[2] = (*myHEX8)[i].nodeID[4];
+			tmp_faces[2+i*MAX_FACES].nodeID[3] = (*myHEX8)[i].nodeID[7];
+			// The 4th faces
+			tmp_faces[3+i*MAX_FACES].nodeID[0] = (*myHEX8)[i].nodeID[1];
+			tmp_faces[3+i*MAX_FACES].nodeID[1] = (*myHEX8)[i].nodeID[2];
+			tmp_faces[3+i*MAX_FACES].nodeID[2] = (*myHEX8)[i].nodeID[6];
+			tmp_faces[3+i*MAX_FACES].nodeID[3] = (*myHEX8)[i].nodeID[5];
+			// The 5th faces
+			tmp_faces[4+i*MAX_FACES].nodeID[0] = (*myHEX8)[i].nodeID[2];
+			tmp_faces[4+i*MAX_FACES].nodeID[1] = (*myHEX8)[i].nodeID[3];
+			tmp_faces[4+i*MAX_FACES].nodeID[2] = (*myHEX8)[i].nodeID[7];
+			tmp_faces[4+i*MAX_FACES].nodeID[3] = (*myHEX8)[i].nodeID[6];
+			// The 6th faces
+			tmp_faces[5+i*MAX_FACES].nodeID[0] = (*myHEX8)[i].nodeID[4];
+			tmp_faces[5+i*MAX_FACES].nodeID[1] = (*myHEX8)[i].nodeID[5];
+			tmp_faces[5+i*MAX_FACES].nodeID[2] = (*myHEX8)[i].nodeID[6];
+			tmp_faces[5+i*MAX_FACES].nodeID[3] = (*myHEX8)[i].nodeID[7];
+		}
 
 	// 	#pragma omp for 					// Copying tmp_edges to ref_edges and then sorting nodeID of tmp_edges
 	// 	for (int i=0; i<*num_HEX8; i++) {
@@ -483,7 +477,7 @@ void Construct_Faces_HEX8( int* num_nodes, int* num_faces, int* num_HEX8, FA_HEX
 	// 		}
 	// 	}
 
-	// }
+	}
 	// // Free used memory
 	// free(link_edges_ind);
 	// free(link_edges_ptr);
