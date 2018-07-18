@@ -70,24 +70,31 @@ def read_gmsh(filename, nodes, faces, elements, face2index):
             line = lines[i].split(" ")
             if line[1] == '4':
                 tempElem = element()
-                tempElem.ptIndex = sorted(map(int, line[5:9]))
+                tempElem.ptIndices = sorted(map(int, line[5:9]))
                 tempElem.elemIndex = elemIndex
                 elements.append(tempElem)
                 elemIndex += 1
-                tempFaces = generateFaces(tempElem.ptIndex)
+                tempFaces = generateFaces(tempElem.ptIndices)
                 for tempFace in tempFaces:
                     k = getKey(tempFace)
                     if k not in face2index:
                         face2index[k] = faceIndex
                         faceObj = face(tempFace, faceIndex)
-                        faceObj.elemIndices.append(tempElem.elemIndex)
+                        faceObj.elemens.append(tempElem)
                         faces.append(faceObj)
-                        tempElem.faceIndices.append(faceIndex)
+                        tempElem.faces.append(faceObj)
                         faceIndex += 1
                     else:
                         # Insert faces and elements
                         tempFaceIdx = face2index[k]
-                        tempElem.faceIndices.append(tempFaceIdx)
-                        faces[tempFaceIdx].elemIndices.append(tempElem.elemIndex)
+                        tempElem.faces.append(faces[tempFaceIdx])
+                        faces[tempFaceIdx].elements.append(tempElem)
 
         i+=1
+
+def refine_gmsh(filename):
+    nodes = []
+    faces = []
+    elements = []
+    face2index = {}
+    read_gmsh(filename, nodes, faces, elements, face2index)
