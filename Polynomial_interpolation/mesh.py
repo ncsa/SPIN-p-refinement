@@ -118,12 +118,15 @@ class mesh:
 
 '''
     Wrapper function. Get the point on the quadratic surface.
-    
+    @author: Hongru Yang
+    @date: 07/16/2018
+    @param pt a point type of numpy array of shape (3,)
+    @param normal normal vector typr numpy array of shape (3,)
 '''
     def getQuadraticSurfacePoint(self, pt, normal):
         return getSurfacePoint(self.coefficients, pt, normal)
 
-
+'''
     def getPlaneZValue(self, x, y): # return only positive value; used for error measuring
         z = (1-self.firstOrderCoef[0]*x-self.firstOrderCoef[1]*y)/self.firstOrderCoef[2]
         if z<0:
@@ -145,7 +148,13 @@ class mesh:
         p = np.array([secondOrder, firstOrder, const])
         root = np.roots(p)
         return np.amax(root)
+'''
 
+'''
+    Compute the first order coefficients. (The first order coefficients are the normal vector of the plane, ax+by+cz).
+    @author: Hongru Yang
+    @date: 07/16/2018
+'''
     def getFirstOrderCoef(self):
         # ax + by + cz + d = 0 ==> (assume d is nonzero)
         # ax + by + cz = 1
@@ -159,6 +168,11 @@ class mesh:
             y = np.ones(3)
             self.firstOrderCoef = np.linalg.solve(m, y)
 
+'''
+    Compute the coefficients of polynomial interpolation running with its edge neighbor.
+    @author: Hongru Yang
+    @date: 07/16/2018
+'''
     def neighborInterpolation(self):
         if len(self.edgeNeighbor)<3:
             if self.edgeNeighbor[0].neighborCoefficients is not None:
@@ -192,6 +206,11 @@ class mesh:
         self.neighborCoefficients = np.linalg.solve(m, Y)
         return True
 
+'''
+    Compute the coefficients of the quadratic surface that the second order element is on.
+    @author: Hongru Yang
+    @date: 07/16/2018
+'''
     def getCoefficients(self):
         # self.pts has to have length 6
         if len(self.pts)<6:
@@ -210,12 +229,16 @@ class mesh:
             Y = np.ones(6)
             self.coefficients = np.linalg.solve(m, Y)
 
+'''
+    This function has to be called when all meshes have neighborCoefficients
+    and first order coefficients.
+    For all meshes in neighborMesh, first calculate the midpoint of the share
+    edge, then calculate the point at both surfaces. Finally take the average.
+    Get new point in the following order: 0,1; 1,2; 0,2
+    @author: Hongru Yang
+    @date: 07/16/2018
+'''
     def getNewPoint(self):
-        # This function has to be called when all meshes have neighborCoefficients
-        # and first order coefficients.
-        # For all meshes in neighborMesh, first calculate the midpoint of the share
-        # edge, then calculate the point at both surfaces. Finally take the average.
-        # Get new point in the following order: 0,1; 1,2; 0,2
         for i in range(self.vertexNum):
             shareNode = [self.pts[i], self.pts[(i+1)%self.vertexNum]]
             mesh = findMesh(self.edgeNeighbor, self.pts[i], self.pts[(i+1)%self.vertexNum])
