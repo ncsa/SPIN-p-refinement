@@ -1,13 +1,41 @@
+import numpy as np
+
 def extractUniquePts(face1, face2, face3):
     ret = []
     for pt in face1.ptIndices:
         ret.append(pt)
-    for pt in face2.ptIndices if pt not in ret:
-        ret.append(pt)
-    for pt in face3.ptIndices if pt not in ret:
-        ret.append(pt)
+    for pt in face2.ptIndices:
+        if pt not in ret:
+            ret.append(pt)
+    for pt in face3.ptIndices:
+        if pt not in ret:
+            ret.append(pt)
     return ret
 
+'''
+    Helper function. Get the point on quadratic surface given a point and the normal of a plane.
+    @author: Hongru Yang
+    @date: 07/16/2018
+    @param coef coefficients of the quadratic surface, ordered as follow: ax+by+cz+dx^2+ey^2+fz^2
+    @param point midpoint of an edge
+    @param normal normal vector of the plane where the midpoint is
+'''
+def getSurfacePoint(coef,const, point, normal): # Need to accomadate for const is one case
+    # return a point on the surface that is perpendicular to the plane
+    secondOrder = coef[5]*normal[2]**2 + coef[4]*normal[1]**2 + coef[3]*normal[0]**2
+    firstOrder = coef[0]*normal[0] + coef[1]*normal[1] + coef[2]*normal[2] + 2*normal[0]*point[0]*coef[3] + 2*normal[1]*point[1]*coef[4] + 2*normal[2]*point[2]*coef[5]
+    const = -1*const + coef[0]*point[0]+coef[1]*point[1]+coef[2]*point[2]+ coef[3]*point[0]**2+ coef[4]*point[1]**2+ coef[5]*point[2]**2
+    p = np.array([secondOrder, firstOrder, const])
+    root = np.roots(p)
+    root_abs = np.absolute(root)
+    index = np.argmin(root_abs)
+    return root[index]*normal+point
+
+def findFace(faces, edge):
+    for face in faces:
+        if edge[0] in face.adjacentFaces and edge[1] in face.adjacentFaces:
+            return face
+    return None
 
 class face:
     def __init__(self, ptIndices, faceIndex, nodes):
@@ -21,15 +49,17 @@ class face:
         self.firstOrderConst = None
         self.visited = False
         self.adjacentFaces = []
+        self.newpts = []
 
-'''
-    Check whether the face share the given edge.
-    @author Hongru Yang
-    @date 07/18/2018
-    @param ptidx1 integer index of point1
-    @param ptidx2 integer index of point2
-'''
+
     def shareEdge(self, ptidx1, ptidx2):
+        '''
+        Check whether the face share the given edge.
+        @author Hongru Yang
+        @date 07/18/2018
+        @param ptidx1 integer index of point1
+        @param ptidx2 integer index of point2
+        '''
         return (ptidx1 in self.ptIndices) and (ptidx2 in self.ptIndices)
 
 
@@ -53,15 +83,17 @@ class face:
         else:
             self.visited = True
             for elem in self.elements:
-                for face in elem.faces if (face.visited is False) and (face.shareEdge(pt1, pt2)):
-                    return face.findExternalFace(pt1, pt2)
+                for face in elem.faces:
+                    if (face.visited is False) and (face.shareEdge(pt1, pt2)):
+                        return face.findExternalFace(pt1, pt2)
 
-'''
-    Recursively clear all marked faces.
-    @author Hongru Yang
-    @date 07/18/2018
-'''
+
     def clearMarks(self):
+        '''
+        Recursively clear all marked faces.
+        @author Hongru Yang
+        @date 07/18/2018
+        '''
         if self.visited == False:
             return
         else:
@@ -69,6 +101,7 @@ class face:
             for elem in self.elements:
                 for face in elem.faces:
                     face.clearMarks()
+
 
     def neighborInterpolation(self):
         if self.neighborCoefficients is not None:
@@ -80,32 +113,36 @@ class face:
 
         m = []
         for idx in ptList:
-            pt = (self.globalNodes[idx])
+            pt = (self.globalNodes[idx-1])
             x,y,z = pt
             temp = [x, y, z, x**2, y**2, z**2]
             m.append(temp)
         m = np.array(m)
-
+        #print(m.shape)
         try:
             y = np.ones(6)
             self.neighborCoefficients = np.linalg.solve(m, y)
             self.neighborConst = 1
+            return 1
         except np.linalg.linalg.LinAlgError:
-            r = np.random.rand(3)
+            return 0
+            '''#print(ptList)
+            r = np.array([10,10,10])
             m = []
             for idx in ptList:
-                pt = self.globalNodes[idx]
+                pt = self.globalNodes[idx-1]
                 x, y, z = pt + r
                 temp = [x, y, z, x**2, y**2, z**2]
                 m.append(temp)
             m = np.array(m)
+            #print(m)
             y = np.ones(6)
             coef = np.linalg.solve(m, y)
             coef[0] = coef[0]+2*coef[3]*r[0]
             coef[1] = coef[1]+2*coef[4]*r[1]
             coef[2] = coef[2]+2*coef[5]*r[2]
             self.neighborCoefficients = coef
-            self.neighborConst = 0
+            self.neighborConst = 0'''
 
     def getFirstOrderCoef(self):
         # ax + by + cz + d = 0 ==> (assume d is nonzero)
@@ -113,7 +150,7 @@ class face:
         if self.firstOrderCoef is None:
             m = []
             for idx in self.ptIndices:
-                pt = self.globalNodes[idx]
+                pt = self.globalNodes[idx-1]
                 m.append(pt)
             m = np.array(m)
             y = np.ones(3)
@@ -125,27 +162,27 @@ class face:
                 r = np.random.rand(3)
                 m = []
                 for idx in self.ptIndices:
-                    pt = self.globalNodes[idx]
+                    pt = self.globalNodes[idx-1]
                     m.append(pt+r)
                 m = np.array(m)
                 y = np.ones(3)
                 self.firstOrderCoef = np.linalg.solve(m, y)
                 self.firstOrderConst = 0
 
-'''
-    This function has to be called after neighborInterpolation and getFirstOrderCoef.
-'''
+
     def getNewPoint(self):
-        # Neet to change
-        for i in range(self.vertexNum):
-            shareNode = [self.pts[i], self.pts[(i+1)%self.vertexNum]]
-            mesh = findMesh(self.edgeNeighbor, self.pts[i], self.pts[(i+1)%self.vertexNum])
-            mid = np.average(shareNode, axis = 0)
-            if mesh is None:
+        '''
+        This function has to be called after neighborInterpolation and getFirstOrderCoef.
+        '''
+        for i in range(len(self.ptIndices)):
+            edge = [self.ptIndices[i], self.ptIndices[(i+1)%len(self.ptIndices)]]
+            face = findFace(self.adjacentFaces, edge)
+            mid = np.average([self.globalNodes[edge[0]-1], self.globalNodes[edge[1]-1]], axis = 0)
+            if face is None:
                 newpt = getSurfacePoint(self.neighborCoefficients, mid, self.firstOrderCoef)
-                self.pts.append(newpt)
+                self.newpts.append(newpt)
                 continue
 
-            newpoint1 = getSurfacePoint(self.neighborCoefficients, mid, self.firstOrderCoef)
-            newpoint2 = getSurfacePoint(mesh.neighborCoefficients, mid, mesh.firstOrderCoef)
-            self.pts.append(np.average([newpoint1, newpoint2], axis = 0))
+            newpoint1 = getSurfacePoint(self.neighborCoefficients, self.neighborConst, mid, self.firstOrderCoef)
+            newpoint2 = getSurfacePoint(face.neighborCoefficients, face.neighborConst, mid, face.firstOrderCoef)
+            self.newpts.append(np.average([newpoint1, newpoint2], axis = 0))

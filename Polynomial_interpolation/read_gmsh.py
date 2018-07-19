@@ -45,7 +45,6 @@ def read_gmsh(filename, nodes, faces, elements, face2index):
     isElement = False
 
     faceIndex = 0
-    elemIndex = 0
     i = 0
     while i < (len(lines)):
         if lines[i] == "$Nodes\n":
@@ -71,16 +70,14 @@ def read_gmsh(filename, nodes, faces, elements, face2index):
             if line[1] == '4':
                 tempElem = element()
                 tempElem.ptIndices = sorted(map(int, line[5:9]))
-                tempElem.elemIndex = elemIndex
                 elements.append(tempElem)
-                elemIndex += 1
                 tempFaces = generateFaces(tempElem.ptIndices)
                 for tempFace in tempFaces:
                     k = getKey(tempFace)
                     if k not in face2index:
                         face2index[k] = faceIndex
-                        faceObj = face(tempFace, faceIndex)
-                        faceObj.elemens.append(tempElem)
+                        faceObj = face(tempFace, faceIndex, nodes)
+                        faceObj.elements.append(tempElem)
                         faces.append(faceObj)
                         tempElem.faces.append(faceObj)
                         faceIndex += 1
@@ -98,3 +95,13 @@ def refine_gmsh(filename):
     elements = []
     face2index = {}
     read_gmsh(filename, nodes, faces, elements, face2index)
+
+    unique_faces = [face for face in faces if len(face.elements)==1]
+    print(len(unique_faces))
+    success = 0
+    for face in unique_faces:
+        success += face.neighborInterpolation()
+        face.getFirstOrderCoef()
+    print(success)
+
+refine_gmsh("rocket.msh")
