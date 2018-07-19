@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def extractUniquePts(face1, face2, face3):
     ret = []
@@ -11,6 +12,12 @@ def extractUniquePts(face1, face2, face3):
         if pt not in ret:
             ret.append(pt)
     return ret
+
+def solveSecondOrderEquation(coef):
+    a = coef[0]
+    b = coef[1]
+    c = coef[2]
+    return (-1*b-np.sqrt(b**2-4*a*c))/(2*a), (-1*b+np.sqrt(b**2-4*a*c))/(2*a)
 
 '''
     Helper function. Get the point on quadratic surface given a point and the normal of a plane.
@@ -26,7 +33,7 @@ def getSurfacePoint(coef,const, point, normal): # Need to accomadate for const i
     firstOrder = coef[0]*normal[0] + coef[1]*normal[1] + coef[2]*normal[2] + 2*normal[0]*point[0]*coef[3] + 2*normal[1]*point[1]*coef[4] + 2*normal[2]*point[2]*coef[5]
     const = -1*const + coef[0]*point[0]+coef[1]*point[1]+coef[2]*point[2]+ coef[3]*point[0]**2+ coef[4]*point[1]**2+ coef[5]*point[2]**2
     p = np.array([secondOrder, firstOrder, const])
-    root = np.roots(p)
+    root = solveSecondOrderEquation(p)
     root_abs = np.absolute(root)
     index = np.argmin(root_abs)
     return root[index]*normal+point
@@ -145,8 +152,6 @@ class face:
             self.neighborConst = 0'''
 
     def getFirstOrderCoef(self):
-        # ax + by + cz + d = 0 ==> (assume d is nonzero)
-        # ax + by + cz = 1
         if self.firstOrderCoef is None:
             m = []
             for idx in self.ptIndices:
@@ -174,15 +179,27 @@ class face:
         '''
         This function has to be called after neighborInterpolation and getFirstOrderCoef.
         '''
+        if self.neighborCoefficients is None:
+            for i in range(len(self.ptIndices)):
+                edge = [self.ptIndices[i], self.ptIndices[(i+1)%len(self.ptIndices)]]
+                mid = np.average([self.globalNodes[edge[0]-1], self.globalNodes[edge[1]-1]], axis = 0)
+                self.newpts.append(mid)
+            return
         for i in range(len(self.ptIndices)):
             edge = [self.ptIndices[i], self.ptIndices[(i+1)%len(self.ptIndices)]]
             face = findFace(self.adjacentFaces, edge)
             mid = np.average([self.globalNodes[edge[0]-1], self.globalNodes[edge[1]-1]], axis = 0)
             if face is None:
-                newpt = getSurfacePoint(self.neighborCoefficients, mid, self.firstOrderCoef)
+                newpt = getSurfacePoint(self.neighborCoefficients, self.neighborConst, mid, self.firstOrderCoef)
                 self.newpts.append(newpt)
+                continue
+            elif face.neighborCoefficients is None:
+                self.newpts.append(mid)
                 continue
 
             newpoint1 = getSurfacePoint(self.neighborCoefficients, self.neighborConst, mid, self.firstOrderCoef)
             newpoint2 = getSurfacePoint(face.neighborCoefficients, face.neighborConst, mid, face.firstOrderCoef)
-            self.newpts.append(np.average([newpoint1, newpoint2], axis = 0))
+            if math.isnan(newpoint1[0]) or math.isnan(newpoint2[0]):
+                self.newpts.append(mid)
+            else:
+                self.newpts.append(np.average([newpoint1, newpoint2], axis = 0))

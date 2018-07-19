@@ -97,11 +97,10 @@ def refine_gmsh(filename):
     read_gmsh(filename, nodes, faces, elements, face2index)
 
     unique_faces = [face for face in faces if len(face.elements)==1]
-    print(len(unique_faces))
-    success = 0
     for face in unique_faces:
-        success += face.neighborInterpolation()
+        face.neighborInterpolation()
         face.getFirstOrderCoef()
-    print(success)
+    for face in unique_faces:
+        face.getNewPoint()
 
 refine_gmsh("rocket.msh")
