@@ -1,6 +1,7 @@
 import numpy as np
-from face import face
-from element import element
+from face import Face
+from element import Element
+from multiprocessing import Pool
 
 '''
     Generate 4 faces of a tetrahedron.
@@ -32,12 +33,8 @@ def getKey(ptsIndex):
     @param elements an empty list
     @param face2index an empty dictionary
 '''
-def read_gmsh(filename, nodes, faces, elements, face2index):
+def read_gmsh(filename, nodes, faces, elements, otherElements, face2index):
     f = open(filename, "r")
-    #nodes = []
-    #faces = []
-    #elements = []
-    #face2index = {}
 
     lines = f.readlines()
     #print(lines)
@@ -68,7 +65,7 @@ def read_gmsh(filename, nodes, faces, elements, face2index):
         elif isElement == True:
             line = lines[i].split(" ")
             if line[1] == '4':
-                tempElem = element()
+                tempElem = Element()
                 tempElem.ptIndices = sorted(map(int, line[5:9]))
                 elements.append(tempElem)
                 tempFaces = generateFaces(tempElem.ptIndices)
@@ -76,7 +73,7 @@ def read_gmsh(filename, nodes, faces, elements, face2index):
                     k = getKey(tempFace)
                     if k not in face2index:
                         face2index[k] = faceIndex
-                        faceObj = face(tempFace, faceIndex, nodes)
+                        faceObj = Face(tempFace, faceIndex, nodes)
                         faceObj.elements.append(tempElem)
                         faces.append(faceObj)
                         tempElem.faces.append(faceObj)
@@ -86,21 +83,62 @@ def read_gmsh(filename, nodes, faces, elements, face2index):
                         tempFaceIdx = face2index[k]
                         tempElem.faces.append(faces[tempFaceIdx])
                         faces[tempFaceIdx].elements.append(tempElem)
+            else:
+                otherElements.append(lines[i])
 
         i+=1
+
+def write_gmsh(filename, nodes, elements, otherElements):
+    element_type = 11
+    point2index = {} # here the indices are the 1-based index
+    i = len(nodes)+1
+    for element in elements:
+        element.orderNodes()
+        # add new nodes to nodes array
+        for node in element.newpts:
+            k = str(node)
+            if k not in point2index:
+                nodes.append(node)
+                point2index[k] = i
+                i += 1
+            element.ptIndices.append(point2index[k])
+
+    f = open(filename, "w+")
+    f.write("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n")
+    f.write("%d\n", %len(nodes))
+    j = 1
+    for node in nodes:
+        f.write("%d %f %f %f\n", %(j, node[0], node[1], node[2]))
+        j += 1
+    f.write("$EndNodes\n$Elements\n%d\n", %(len(elements)+len(otherElements)))
+    for otherElement in otherElements:
+        f.write(otherElement)
+    k = len(ohterElements)+1
+    for element in elements:
+        f.write("%d %d 2 0 1 %d %d %d %d %d %d %d %d\n", %(k,element_type, element.ptIndices[0],element.ptIndices[1],element.ptIndices[2],element.ptIndices[3], element.ptIndices[4],element.ptIndices[5],element.ptIndices[6],element.ptIndices[7],element.ptIndices[8],element.ptIndices[9]))
+        k += 1
+    f.write("$EndElements\n")
+
 
 def refine_gmsh(filename):
     nodes = []
     faces = []
     elements = []
+    otherElements = []
     face2index = {}
-    read_gmsh(filename, nodes, faces, elements, face2index)
+    read_gmsh(filename, nodes, faces, elements, ohterElements, face2index)
 
-    unique_faces = [face for face in faces if len(face.elements)==1]
-    for face in unique_faces:
-        face.neighborInterpolation()
-        face.getFirstOrderCoef()
-    for face in unique_faces:
-        face.getNewPoint()
+    for face in faces:
+        if len(face.elements)==1:
+            face.neighborInterpolation()
+            face.getFirstOrderCoef()
+
+    #p = Pool(2)
+    #p.map(Face.getFirstOrderCoef, unique_faces)
+    for face in faces:
+        if len(face.elements)==1:
+            face.getNewPoint()
+
+    write_gmsh("refined"+filename, nodes, elements, otherElements)
 
 refine_gmsh("rocket.msh")
