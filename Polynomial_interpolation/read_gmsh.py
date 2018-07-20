@@ -119,6 +119,46 @@ def write_gmsh(filename, nodes, elements, otherElements):
         k += 1
     f.write("$EndElements\n")
 
+def zero_based_index(n):
+    return str(n-1)
+
+def write_vtk(filename, header, nodes, elements):
+    #Note VTK file is 0-based indexed
+    element_type = "24"
+    point2index = {}
+    i = len(nodes)+1
+    for element in elements:
+        element.orderNodes()
+        # add new nodes to nodes array
+        for node in element.newpts:
+            k = str(node)
+            if k not in point2index:
+                nodes.append(node)
+                point2index[k] = i
+                i += 1
+            element.ptIndices.append(point2index[k])
+
+    f = open(filename, "w+")
+    f.write("# vtk DataFile Version 1.0\n")
+    f.write(header)
+    f.write("\nASCII\n\nDATASET UNSTRUCTURED_GRID\n")
+    f.write("POINTS       %d float\n" %len(nodes))
+    for node in nodes:
+        f.write("  %f       %f       %f    \n" %(node[0], node[1], node[2]))
+    f.write("\n")
+
+    size = 11
+    f.write("CELLS         %d          %d\n" %(len(elements), size*len(elements)))
+    for element in elements:
+        l = [10]
+        for pt in element.ptIndices:
+            l.append(pt-1)
+        f.write(" "+"        ".join(map(str, l))+"\n")
+    f.write("\n")
+
+    f.write("CELL_TYPES         %d\n" %len(elements))
+    cellTypes = (element_type+"\n")*len(elements)
+    f.write(cellTypes)
 
 def refine_gmsh(filename):
     nodes = []
@@ -139,6 +179,7 @@ def refine_gmsh(filename):
         if len(face.elements)==1:
             face.getNewPoint()
 
-    write_gmsh("refined_"+filename, nodes, elements, otherElements)
+    #empty = []
+    write_vtk("test_rocket.vtk", "test_rocket", nodes, elements)
 
 refine_gmsh("rocket.msh")

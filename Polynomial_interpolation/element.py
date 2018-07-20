@@ -16,7 +16,7 @@ class Element:
         '''
         This function has to be called after refinement of faces.
         '''
-        edges = [(self.ptIndices[0],self.ptIndices[1]), (self.ptIndices[1],self.ptIndices[2]), (self.ptIndices[0],self.ptIndices[2]),(self.ptIndices[0],self.ptIndices[3]),(self.ptIndices[2],self.ptIndices[3]),(self.ptIndices[3],self.ptIndices[1])]
+        edges = [(self.ptIndices[0],self.ptIndices[1]), (self.ptIndices[1],self.ptIndices[2]), (self.ptIndices[0],self.ptIndices[2]),(self.ptIndices[0],self.ptIndices[3]),(self.ptIndices[1],self.ptIndices[3]),(self.ptIndices[3],self.ptIndices[2])]
         for edge in edges:
             face = self.findExternalFace(edge[0], edge[1])
             if face is None:
