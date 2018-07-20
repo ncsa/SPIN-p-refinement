@@ -27,7 +27,7 @@ def solveSecondOrderEquation(coef):
     @param point midpoint of an edge
     @param normal normal vector of the plane where the midpoint is
 '''
-def getSurfacePoint(coef,const, point, normal): # Need to accomadate for const is one case
+def getSurfacePoint(coef,const, point, normal, threshold): # surface point can't be higher than threshold (i.e. the semi-circle)
     # return a point on the surface that is perpendicular to the plane
     secondOrder = coef[5]*normal[2]**2 + coef[4]*normal[1]**2 + coef[3]*normal[0]**2
     firstOrder = coef[0]*normal[0] + coef[1]*normal[1] + coef[2]*normal[2] + 2*normal[0]*point[0]*coef[3] + 2*normal[1]*point[1]*coef[4] + 2*normal[2]*point[2]*coef[5]
@@ -36,15 +36,21 @@ def getSurfacePoint(coef,const, point, normal): # Need to accomadate for const i
     root = solveSecondOrderEquation(p)
     root_abs = np.absolute(root)
     index = np.argmin(root_abs)
-    return root[index]*normal+point
+    ret = root[index]*normal+point
+    if math.isnan(ret[0]):
+        return None
+    elif (np.linalg.norm(ret-point)>threshold):
+        return None
+    else:
+        return ret
 
 def findFace(faces, edge):
     for face in faces:
-        if edge[0] in face.adjacentFaces and edge[1] in face.adjacentFaces:
+        if edge[0] in face.ptIndices and edge[1] in face.ptIndices:
             return face
     return None
 
-class face:
+class Face:
     def __init__(self, ptIndices, faceIndex, nodes):
         self.globalNodes = nodes
         self.ptIndices = [ptIndex for ptIndex in ptIndices]
@@ -69,6 +75,22 @@ class face:
         '''
         return (ptidx1 in self.ptIndices) and (ptidx2 in self.ptIndices)
 
+    def getNewEdgePoint(self, pt1, pt2):
+        '''The function can only be called on surface.
+        '''
+        i1 = 0
+        i2 = 0
+        for i in range(len(self.ptIndices)):
+            if self.ptIndices[i]==pt1:
+                i1 = i
+            if self.ptIndices[i]==pt2:
+                i2 = i
+        if (i1==0 and i2==1) or (i1==1 and i2==0):
+            return self.newpts[0]
+        elif (i1==2 and i2==1) or (i1==1 and i2==2):
+            return self.newpts[1]
+        elif (i1==0 and i2==2) or (i1==2 and i2==0):
+            return self.newpts[2]
 
     def findAjacentFaces(self):
         if len(self.elements)>1: # a face that is internal don't need this function
@@ -189,17 +211,18 @@ class face:
             edge = [self.ptIndices[i], self.ptIndices[(i+1)%len(self.ptIndices)]]
             face = findFace(self.adjacentFaces, edge)
             mid = np.average([self.globalNodes[edge[0]-1], self.globalNodes[edge[1]-1]], axis = 0)
+            threshold = np.linalg.norm(self.globalNodes[edge[0]-1]-mid)
             if face is None:
-                newpt = getSurfacePoint(self.neighborCoefficients, self.neighborConst, mid, self.firstOrderCoef)
+                newpt = getSurfacePoint(self.neighborCoefficients, self.neighborConst, mid, self.firstOrderCoef, threshold)
                 self.newpts.append(newpt)
                 continue
             elif face.neighborCoefficients is None:
                 self.newpts.append(mid)
                 continue
 
-            newpoint1 = getSurfacePoint(self.neighborCoefficients, self.neighborConst, mid, self.firstOrderCoef)
-            newpoint2 = getSurfacePoint(face.neighborCoefficients, face.neighborConst, mid, face.firstOrderCoef)
-            if math.isnan(newpoint1[0]) or math.isnan(newpoint2[0]):
+            newpoint1 = getSurfacePoint(self.neighborCoefficients, self.neighborConst, mid, self.firstOrderCoef, threshold)
+            newpoint2 = getSurfacePoint(face.neighborCoefficients, face.neighborConst, mid, face.firstOrderCoef, threshold)
+            if newpoint1 is None or newpoint2 is None:
                 self.newpts.append(mid)
             else:
                 self.newpts.append(np.average([newpoint1, newpoint2], axis = 0))

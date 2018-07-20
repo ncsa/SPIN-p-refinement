@@ -65,7 +65,7 @@ def read_gmsh(filename, nodes, faces, elements, otherElements, face2index):
         elif isElement == True:
             line = lines[i].split(" ")
             if line[1] == '4':
-                tempElem = Element()
+                tempElem = Element(nodes)
                 tempElem.ptIndices = sorted(map(int, line[5:9]))
                 elements.append(tempElem)
                 tempFaces = generateFaces(tempElem.ptIndices)
@@ -105,17 +105,17 @@ def write_gmsh(filename, nodes, elements, otherElements):
 
     f = open(filename, "w+")
     f.write("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n")
-    f.write("%d\n", %len(nodes))
+    f.write("%d\n" %len(nodes))
     j = 1
     for node in nodes:
-        f.write("%d %f %f %f\n", %(j, node[0], node[1], node[2]))
+        f.write("%d %f %f %f\n" %(j, node[0], node[1], node[2]))
         j += 1
-    f.write("$EndNodes\n$Elements\n%d\n", %(len(elements)+len(otherElements)))
+    f.write("$EndNodes\n$Elements\n%d\n" %(len(elements)+len(otherElements)))
     for otherElement in otherElements:
         f.write(otherElement)
-    k = len(ohterElements)+1
+    k = len(otherElements)+1
     for element in elements:
-        f.write("%d %d 2 0 1 %d %d %d %d %d %d %d %d\n", %(k,element_type, element.ptIndices[0],element.ptIndices[1],element.ptIndices[2],element.ptIndices[3], element.ptIndices[4],element.ptIndices[5],element.ptIndices[6],element.ptIndices[7],element.ptIndices[8],element.ptIndices[9]))
+        f.write("%d %d 2 0 1 %d %d %d %d %d %d %d %d %d %d\n" %(k,element_type, element.ptIndices[0],element.ptIndices[1],element.ptIndices[2],element.ptIndices[3], element.ptIndices[4],element.ptIndices[5],element.ptIndices[6],element.ptIndices[7],element.ptIndices[8],element.ptIndices[9]))
         k += 1
     f.write("$EndElements\n")
 
@@ -126,7 +126,7 @@ def refine_gmsh(filename):
     elements = []
     otherElements = []
     face2index = {}
-    read_gmsh(filename, nodes, faces, elements, ohterElements, face2index)
+    read_gmsh(filename, nodes, faces, elements, otherElements, face2index)
 
     for face in faces:
         if len(face.elements)==1:
@@ -139,6 +139,6 @@ def refine_gmsh(filename):
         if len(face.elements)==1:
             face.getNewPoint()
 
-    write_gmsh("refined"+filename, nodes, elements, otherElements)
+    write_gmsh("refined_"+filename, nodes, elements, otherElements)
 
 refine_gmsh("rocket.msh")
