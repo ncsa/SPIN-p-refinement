@@ -1,3 +1,10 @@
+'''
+    @file: element.py
+    @author: Hongru Yang
+    @date: 07/16/2018
+    @brief: definition of Element class
+'''
+
 class Element:
     def __init__(self, nodes):
         self.globalNodes = nodes
@@ -6,6 +13,13 @@ class Element:
         self.newpts = []
 
     def findExternalFace(self, pt1, pt2):
+        '''
+        Get the external face with shared edge (pt1, pt2).
+        @author Hongru Yang
+        @date 07/18/2018
+        @param pt1 integer index of point1
+        @param pt2 integer index of point2
+        '''
         for face in self.faces:
             if len(face.elements)==1 and face.shareEdge(pt1, pt2):
                 return face
@@ -15,6 +29,10 @@ class Element:
     def orderNodes(self):
         '''
         This function has to be called after refinement of faces.
+        @author Hongru Yang
+        @date 07/18/2018
+        @param pt1 integer index of point1
+        @param pt2 integer index of point2
         '''
         edges = [(self.ptIndices[0],self.ptIndices[1]), (self.ptIndices[1],self.ptIndices[2]), (self.ptIndices[0],self.ptIndices[2]),(self.ptIndices[0],self.ptIndices[3]),(self.ptIndices[1],self.ptIndices[3]),(self.ptIndices[3],self.ptIndices[2])]
         for edge in edges:

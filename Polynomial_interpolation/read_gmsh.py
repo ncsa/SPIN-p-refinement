@@ -1,3 +1,10 @@
+'''
+    @file: read_gmsh.py
+    @author: Hongru Yang
+    @date: 07/16/2018
+    @brief: definition of gmsh reader, writer, vtk writer function
+'''
+
 import numpy as np
 from face import Face
 from element import Element
@@ -6,7 +13,7 @@ from multiprocessing import Pool
 '''
     Generate 4 faces of a tetrahedron.
     @autor Hongru Yang
-    @data 07/18/2018
+    @date 07/18/2018
     @param ptsIndex a list of point indices (int)
 '''
 def generateFaces(ptsIndex):
@@ -16,7 +23,7 @@ def generateFaces(ptsIndex):
 '''
     Helper function. Generate keys (string) for dictionary.
     @autor Hongru Yang
-    @data 07/18/2018
+    @date 07/18/2018
     @param ptsIndex a list of point indices (int)
 '''
 def getKey(ptsIndex):
@@ -26,7 +33,7 @@ def getKey(ptsIndex):
 '''
     Read .gmsh file and store the information. Nodes, faces, elements and face2index are about to be filled in.
     @autor Hongru Yang
-    @data 07/18/2018
+    @date 07/18/2018
     @param filename string
     @param nodes an empty list
     @param faces an empty list
@@ -88,6 +95,15 @@ def read_gmsh(filename, nodes, faces, elements, otherElements, face2index):
 
         i+=1
 
+'''
+    A simple function to write .gmsh file. Can be further optimized to reduce the number of system calls.
+    @autor Hongru Yang
+    @date 07/18/2018
+    @param filename string
+    @param nodes a list of node objects
+    @param elements a list of element objects
+    @param otherElements a list of other type of elements (in our case anything except tetrahedron)
+'''
 def write_gmsh(filename, nodes, elements, otherElements):
     element_type = 11
     point2index = {} # here the indices are the 1-based index
@@ -119,9 +135,16 @@ def write_gmsh(filename, nodes, elements, otherElements):
         k += 1
     f.write("$EndElements\n")
 
-def zero_based_index(n):
-    return str(n-1)
 
+'''
+    A simple function to write .vtk file for visualization. Can be further optimized to reduce the number of system calls.
+    @autor Hongru Yang
+    @date 07/18/2018
+    @param filename string
+    @param nodes a list of node objects
+    @param elements a list of element objects
+    @param otherElements a list of other type of elements (in our case anything except tetrahedron)
+'''
 def write_vtk(filename, header, nodes, elements):
     #Note VTK file is 0-based indexed
     element_type = "24"
@@ -160,6 +183,12 @@ def write_vtk(filename, header, nodes, elements):
     cellTypes = (element_type+"\n")*len(elements)
     f.write(cellTypes)
 
+'''
+    A wrapper function to read a gmsh file, refine all of the tetrahedron elements and write the result into a vtk file.
+    @autor Hongru Yang
+    @date 07/18/2018
+    @param filename string
+'''
 def refine_gmsh(filename):
     nodes = []
     faces = []
@@ -173,13 +202,10 @@ def refine_gmsh(filename):
             face.neighborInterpolation()
             face.getFirstOrderCoef()
 
-    #p = Pool(2)
-    #p.map(Face.getFirstOrderCoef, unique_faces)
     for face in faces:
         if len(face.elements)==1:
             face.getNewPoint()
 
-    #empty = []
     write_vtk("test_rocket.vtk", "test_rocket", nodes, elements)
 
 refine_gmsh("rocket.msh")
